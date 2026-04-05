@@ -1,0 +1,64 @@
+services:
+  - type: web
+    name: upi-reservasi-kunjungan
+    env: php
+    buildCommand: bash build.sh
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    envVars:
+      - key: APP_NAME
+        value: "Reservasi Kunjungan UPI"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_LOCALE
+        value: id
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: upi-reservasi-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: upi-reservasi-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: upi-reservasi-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: upi-reservasi-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: upi-reservasi-db
+          property: password
+      - key: SESSION_DRIVER
+        value: cookie
+      - key: CACHE_STORE
+        value: array
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: FILESYSTEM_DISK
+        value: cloudinary
+      - key: CLOUDINARY_URL
+        sync: false   # isi manual di Render dashboard
+      - key: MAIL_MAILER
+        value: log
+      - key: MAIL_FROM_ADDRESS
+        value: humas@upi.edu
+      - key: MAIL_FROM_NAME
+        value: "Humas UPI - Reservasi Kunjungan"
+      - key: ADMIN_EMAIL
+        value: admin@upi.edu
+      - key: ADMIN_PASSWORD
+        sync: false   # isi manual di Render dashboard
+
+databases:
+  - name: upi-reservasi-db
+    databaseName: upi_reservasi
+    user: upi_admin
