@@ -5,12 +5,13 @@
 
 @section('content')
 {{-- Stat Cards --}}
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
     @foreach([
-        ['Total Pengajuan', $counts['all'],      'text-blue-700',   'bg-blue-50 border-blue-200',   '📋'],
+        ['Total Pengajuan', $counts['all'],       'text-blue-700',   'bg-blue-50 border-blue-200',    '📋'],
         ['Menunggu',        $counts['pending'],   'text-yellow-700', 'bg-yellow-50 border-yellow-200','⏳'],
         ['Disetujui',       $counts['approved'],  'text-green-700',  'bg-green-50 border-green-200',  '✅'],
         ['Ditolak',         $counts['rejected'],  'text-red-700',    'bg-red-50 border-red-200',      '❌'],
+        ['Dibatalkan Pemohon', $counts['cancelled'], 'text-gray-700',   'bg-gray-50 border-gray-200',    '🗑️'],
     ] as $stat)
     <div class="bg-white rounded-xl border {{ $stat[3] }} p-4 shadow-sm">
         <div class="text-xl mb-1">{{ $stat[4] }}</div>
@@ -91,7 +92,7 @@
             <h3 class="font-semibold text-gray-700 text-sm">
                 Daftar Pengajuan
                 @if(request('status'))
-                    — <span class="capitalize">{{ request('status') === 'pending' ? 'Menunggu' : (request('status') === 'approved' ? 'Disetujui' : 'Ditolak') }}</span>
+                    — <span class="capitalize">{{ request('status') === 'pending' ? 'Menunggu' : (request('status') === 'approved' ? 'Disetujui' : (request('status') === 'cancelled' ? 'Dibatalkan' : 'Ditolak')) }}</span>
                 @endif
             </h3>
             <span class="text-xs text-gray-400">{{ $kunjungan->total() }} data</span>

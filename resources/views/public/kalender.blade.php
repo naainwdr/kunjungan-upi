@@ -33,7 +33,7 @@ $nextYear    = $month == 12 ? $year + 1 : $year;
         <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-red-100 inline-block"></span> Libur</div>
         <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-amber-50 border border-amber-200 inline-block"></span> &lt;7 hari</div>
         <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-gray-100 inline-block"></span> Lewat</div>
-        <div class="flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-green-500 inline-flex items-center justify-center text-white text-xs font-bold">2</span> Disetujui</div>
+        <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-green-500 inline-block"></span> Disetujui</div>
     </div>
 
     {{-- Calendar Card --}}

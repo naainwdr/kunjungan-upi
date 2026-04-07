@@ -106,6 +106,16 @@
             </svg>
             Ditolak
         </a>
+
+        <a href="{{ route('admin.dashboard', ['status' => 'cancelled']) }}"
+           class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-colors
+                  {{ request('status') === 'cancelled' ? 'bg-gray-600 text-white' : 'text-gray-400 bg-gray-800/40 hover:bg-gray-700/60 hover:text-gray-100' }}"
+           onclick="closeSidebar()">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            Dibatalkan
+        </a>
     </nav>
 
     <div class="p-3 border-t border-gray-700 bg-gray-800 flex-shrink-0">

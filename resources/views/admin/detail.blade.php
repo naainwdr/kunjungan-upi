@@ -78,6 +78,16 @@
                         <dd class="font-semibold text-gray-800">{{ $kunjungan->tanggal_format }}</dd>
                     </div>
                     <div>
+                        <dt class="text-gray-400 text-xs mb-0.5">Jam Kunjungan</dt>
+                        <dd class="font-semibold text-gray-800">
+                            @if($kunjungan->jam_mulai)
+                                {{ $kunjungan->jam_mulai }} – {{ $kunjungan->jam_selesai }} WIB
+                            @else
+                                <span class="text-gray-400 italic">Belum ditentukan</span>
+                            @endif
+                        </dd>
+                    </div>
+                    <div>
                         <dt class="text-gray-400 text-xs mb-0.5">Jumlah Peserta</dt>
                         <dd class="font-semibold text-gray-800">{{ number_format($kunjungan->jumlah_peserta) }} orang</dd>
                     </div>
@@ -199,6 +209,12 @@
                 <div class="text-3xl mb-2">❌</div>
                 <p class="font-bold text-red-700 text-sm">Pengajuan Telah Ditolak</p>
                 <p class="text-red-600 text-xs mt-1">{{ $kunjungan->updated_at->diffForHumans() }}</p>
+            </div>
+            @elseif($kunjungan->status === 'cancelled')
+            <div class="bg-gray-100 border border-gray-300 rounded-xl p-5 text-center">
+                <div class="text-3xl mb-2">🗑️</div>
+                <p class="font-bold text-gray-700 text-sm">Dibatalkan oleh Pengguna</p>
+                <p class="text-gray-600 text-xs mt-1">{{ $kunjungan->updated_at->diffForHumans() }}</p>
             </div>
             @endif
 

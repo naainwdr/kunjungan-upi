@@ -18,7 +18,7 @@ class AdminKunjunganController extends Controller
         $query = Kunjungan::query();
 
         // Filter status
-        if ($request->filled('status') && in_array($request->status, ['pending', 'approved', 'rejected'])) {
+        if ($request->filled('status') && in_array($request->status, ['pending', 'approved', 'rejected', 'cancelled'])) {
             $query->where('status', $request->status);
         }
 
@@ -49,10 +49,11 @@ class AdminKunjunganController extends Controller
         $kunjungan = $query->paginate(15)->withQueryString();
 
         $counts = [
-            'all'      => Kunjungan::count(),
-            'pending'  => Kunjungan::where('status', 'pending')->count(),
-            'approved' => Kunjungan::where('status', 'approved')->count(),
-            'rejected' => Kunjungan::where('status', 'rejected')->count(),
+            'all'       => Kunjungan::count(),
+            'pending'   => Kunjungan::where('status', 'pending')->count(),
+            'approved'  => Kunjungan::where('status', 'approved')->count(),
+            'rejected'  => Kunjungan::where('status', 'rejected')->count(),
+            'cancelled' => Kunjungan::where('status', 'cancelled')->count(),
         ];
 
         // Top 5 sekolah paling sering berkunjung (approved)

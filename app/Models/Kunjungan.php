@@ -51,20 +51,22 @@ class Kunjungan extends Model
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
-            'pending'  => 'Menunggu',
-            'approved' => 'Disetujui',
-            'rejected' => 'Ditolak',
-            default    => 'Tidak Diketahui',
+            'pending'   => 'Menunggu',
+            'approved'  => 'Disetujui',
+            'rejected'  => 'Ditolak',
+            'cancelled' => 'Dibatalkan',
+            default     => 'Tidak Diketahui',
         };
     }
 
     public function getStatusBadgeClassAttribute(): string
     {
         return match ($this->status) {
-            'pending'  => 'bg-yellow-100 text-yellow-800',
-            'approved' => 'bg-green-100 text-green-800',
-            'rejected' => 'bg-red-100 text-red-800',
-            default    => 'bg-gray-100 text-gray-800',
+            'pending'   => 'bg-yellow-100 text-yellow-800',
+            'approved'  => 'bg-green-100 text-green-800',
+            'rejected'  => 'bg-red-100 text-red-800',
+            'cancelled' => 'bg-gray-200 text-gray-700',
+            default     => 'bg-gray-100 text-gray-800',
         };
     }
 

@@ -60,12 +60,13 @@ return [
             'report' => false,
         ],
 
-        // Cloudinary — untuk file upload di production (Render.com)
+        // Cloudinary API (Production)
         'cloudinary' => [
-            'driver'   => 'cloudinary',
-            'api_key'  => env('CLOUDINARY_API_KEY'),
-            'api_secret' => env('CLOUDINARY_API_SECRET'),
-            'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+            'driver' => 'cloudinary',
+            'url'    => env('CLOUDINARY_URL'),
+            'cloud'  => env('CLOUDINARY_CLOUD_NAME'),
+            'key'    => env('CLOUDINARY_API_KEY'),
+            'secret' => env('CLOUDINARY_API_SECRET'),
         ],
 
     ],

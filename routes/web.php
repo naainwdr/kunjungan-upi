@@ -19,6 +19,8 @@ Route::get('/reservasi/sukses', [KunjunganController::class, 'sukses'])->name('r
 
 Route::get('/cek-status', [KunjunganController::class, 'cekStatus'])->name('cek-status');
 Route::post('/cek-status', [KunjunganController::class, 'cariStatus'])->name('cek-status.cari');
+Route::post('/reservasi/{id}/batal', [KunjunganController::class, 'batal'])->name('reservasi.batal');
+Route::get('/api/booked-hours', [KunjunganController::class, 'bookedHours'])->name('api.booked-hours');
 
 // ============================================================
 // Admin - Authentication

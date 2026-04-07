@@ -26,7 +26,7 @@
                     @error('query')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
                 <div class="flex items-end">
-                    <button type="submit" id="btn-cari" class="bg-upi-blue text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-upi-light transition-colors whitespace-nowrap">
+                    <button type="submit" id="btn-cari" class="bg-upi-red text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-red-800 transition-colors whitespace-nowrap">
                         🔍 Cari
                     </button>
                 </div>
@@ -46,7 +46,7 @@
             <p class="text-sm text-gray-500 mb-3">Ditemukan <strong>{{ $kunjungan->count() }}</strong> pengajuan:</p>
             <div class="space-y-4">
                 @foreach($kunjungan as $item)
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm relative">
                     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-1">
@@ -95,6 +95,48 @@
                     <div class="mt-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-800">
                         ❌ Mohon maaf, pengajuan kunjungan Anda tidak dapat kami proses. Silakan buat pengajuan baru atau hubungi Humas UPI.
                     </div>
+                    @elseif($item->status === 'cancelled')
+                    <div class="mt-3 bg-gray-100 border border-gray-300 rounded-lg px-4 py-3 text-sm text-gray-700">
+                        🛑 Pengajuan kunjungan ini telah dibatalkan secara mandiri.
+                    </div>
+                    @endif
+
+                    {{-- Action for Cancellation --}}
+                    @if(in_array($item->status, ['pending', 'approved']))
+                        @if(now()->startOfDay()->lte($item->tanggal_kunjungan->clone()->subDays(2)->startOfDay()))
+                            <div class="mt-4 border-t border-gray-100 pt-4">
+                                <button type="button" onclick="document.getElementById('modal-cancel-{{ $item->nomor_registrasi }}').classList.remove('hidden')" class="bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
+                                    🗑️ Batalkan Permohonan
+                                </button>
+                                <p class="text-xs text-gray-400 mt-1">Sistem kami mencatat Anda masih dapat membatalkan. (Maksimal H-2)</p>
+                            </div>
+
+                            {{-- MODAL CANCEL --}}
+                            <div id="modal-cancel-{{ $item->nomor_registrasi }}" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                                <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center transform transition-all">
+                                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <span class="text-3xl">⚠️</span>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-gray-800 mb-2">Batalkan Permohonan?</h3>
+                                    <p class="text-sm text-gray-600 mb-6">Apakah Anda yakin ingin membatalkan permohonan kunjungan <strong class="text-gray-800">{{ $item->nama_sekolah }}</strong>? Tindakan ini tidak dapat dikembalikan.</p>
+                                    
+                                    <form action="{{ route('reservasi.batal', $item->nomor_registrasi) }}" method="POST" class="flex gap-3">
+                                        @csrf
+                                        <button type="button" onclick="document.getElementById('modal-cancel-{{ $item->nomor_registrasi }}').classList.add('hidden')" class="flex-1 bg-gray-100 text-gray-700 font-semibold py-2.5 rounded-xl hover:bg-gray-200 transition-colors">
+                                            Kembali
+                                        </button>
+                                        <button type="submit" class="flex-1 bg-upi-red text-white font-semibold py-2.5 rounded-xl hover:bg-red-800 transition-colors">
+                                            Ya, Batalkan
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        @else
+                            <div class="mt-4 pt-4 border-t border-gray-100">
+                                <p class="text-xs text-red-500 font-semibold">⚠️ Batas waktu pembatalan online telah lewat.</p>
+                                <p class="text-xs text-gray-500">Maksimal pembatalan dilakukan pada H-2 tanggal kunjungan. Jika batal hadir, pihak sekolah berpotensi menerima sanksi teguran kecuali melakukan konfirmasi darurat ke Humas UPI di (022) 2013163.</p>
+                            </div>
+                        @endif
                     @endif
                 </div>
                 @endforeach

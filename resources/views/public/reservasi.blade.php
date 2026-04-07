@@ -143,7 +143,8 @@
                         <input type="date" id="tanggal_kunjungan" name="tanggal_kunjungan"
                             class="w-full border @error('tanggal_kunjungan') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40"
                             value="{{ old('tanggal_kunjungan') }}"
-                            min="{{ now()->addDays(7)->toDateString() }}" required>
+                            min="{{ now()->addDays(7)->toDateString() }}" 
+                            onchange="fetchBookedHours()" required>
                         <p class="text-gray-400 text-xs mt-1">📅 Minimal 7 hari dari hari ini. Senin–Jumat.
                             <a href="{{ route('kalender') }}" class="text-upi-red hover:underline ml-1">Pilih dari kalender →</a>
                         </p>
@@ -252,6 +253,53 @@
 
 @push('scripts')
 <script>
+let blockedHours = [];
+
+async function fetchBookedHours() {
+    const tglInput = document.getElementById('tanggal_kunjungan') || document.querySelector('input[name="tanggal_kunjungan"]');
+    if (!tglInput || !tglInput.value) return;
+
+    try {
+        const response = await fetch(`/api/booked-hours?tanggal=${tglInput.value}`);
+        blockedHours = await response.json();
+    } catch (e) {
+        console.error('Gagal mengambil data jadwal terbooking:', e);
+        blockedHours = [];
+    }
+    
+    renderJamMulai();
+}
+
+function renderJamMulai() {
+    const mulaiEl = document.getElementById('jam_mulai');
+    const oldVal  = '{{ old("jam_mulai") }}';
+    
+    // Simpan pilihan saat ini (jika ada) sebelum kita buat ulang
+    const currentVal = mulaiEl.value || oldVal;
+
+    mulaiEl.innerHTML = '<option value="">-- Pilih jam mulai --</option>';
+    
+    const availableHours = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00'];
+    
+    availableHours.forEach(jam => {
+        const opt = document.createElement('option');
+        opt.value = jam;
+        
+        if (blockedHours.includes(jam)) {
+            opt.disabled = true;
+            opt.textContent = `${jam} WIB (Penuh)`;
+            opt.className = 'text-gray-400 bg-gray-100';
+        } else {
+            opt.textContent = `${jam} WIB`;
+        }
+
+        if (jam === currentVal && !opt.disabled) opt.selected = true;
+        mulaiEl.appendChild(opt);
+    });
+
+    updateJamSelesai();
+}
+
 // ── Time picker logic ──────────────────────────────────
 function updateJamSelesai() {
     const mulaiEl   = document.getElementById('jam_mulai');
@@ -267,18 +315,30 @@ function updateJamSelesai() {
     for (let h = startH + 2; h <= Math.min(startH + 5, 16); h++) {
         const val  = `${String(h).padStart(2,'0')}:00`;
         const dur  = h - startH;
-        const opt  = document.createElement('option');
-        opt.value  = val;
-        opt.textContent = `${val} WIB  (${dur} jam)`;
-        if (val === oldVal) opt.selected = true;
-        selesaiEl.appendChild(opt);
+        
+        // Periksa jika ada jam terbooking antara startH dan h
+        let isOverlapping = false;
+        for (let check = startH; check < h; check++) {
+            const checkStr = `${String(check).padStart(2,'0')}:00`;
+            if (blockedHours.includes(checkStr)) {
+                isOverlapping = true;
+                break;
+            }
+        }
+
+        if (!isOverlapping) {
+            const opt  = document.createElement('option');
+            opt.value  = val;
+            opt.textContent = `${val} WIB  (${dur} jam)`;
+            if (val === oldVal) opt.selected = true;
+            selesaiEl.appendChild(opt);
+        }
     }
 }
 
 // Restore old value on page load (after validation error)
 window.addEventListener('DOMContentLoaded', () => {
-    const mulai = document.getElementById('jam_mulai');
-    if (mulai && mulai.value) updateJamSelesai();
+    fetchBookedHours();
 });
 
 // ── File drop/select ───────────────────────────────────

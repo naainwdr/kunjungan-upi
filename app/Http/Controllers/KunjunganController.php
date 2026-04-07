@@ -106,6 +106,25 @@ class KunjunganController extends Controller
             'file_surat.max'             => 'Ukuran file maksimal 1 MB.',
         ]);
 
+        // Validasi overlap jam kunjungan
+        $startReq = (int) substr($request->jam_mulai, 0, 2);
+        $endReq   = (int) substr($request->jam_selesai, 0, 2);
+        
+        $overlapping = Kunjungan::where('tanggal_kunjungan', $request->tanggal_kunjungan)
+            ->where('status', 'approved')
+            ->get()
+            ->contains(function ($visit) use ($startReq, $endReq) {
+                $startB = (int) substr($visit->jam_mulai, 0, 2);
+                $endB   = (int) substr($visit->jam_selesai, 0, 2);
+                return ($startReq < $endB && $startB < $endReq);
+            });
+
+        if ($overlapping) {
+            return back()->withInput()->withErrors([
+                'jam_mulai' => 'Jadwal jam bentrok dengan kunjungan lain yang sudah disetujui. Silakan pilih hari atau jam lain.'
+            ]);
+        }
+
         $filePath = $this->uploadSurat($request);
 
         $kunjungan = Kunjungan::create([
@@ -142,12 +161,12 @@ class KunjunganController extends Controller
         $disk = config('filesystems.default');
 
         if ($disk === 'cloudinary') {
-            $result = Cloudinary::upload($request->file('file_surat')->getRealPath(), [
+            $result = Cloudinary::uploadApi()->upload($request->file('file_surat')->getRealPath(), [
                 'folder'        => 'upi-reservasi/surat',
                 'resource_type' => 'auto',
                 'public_id'     => 'surat_' . time(),
             ]);
-            return $result->getSecurePath();
+            return $result['secure_url'];
         }
 
         return $request->file('file_surat')->store('surat', 'public');
@@ -168,6 +187,46 @@ class KunjunganController extends Controller
     public function cekStatus()
     {
         return view('public.cek-status');
+    }
+
+    /**
+     * API Ambil data jam yang terbooking di tanggal tertentu
+     */
+    public function bookedHours(Request $request)
+    {
+        $tanggal = $request->query('tanggal');
+        if (!$tanggal) return response()->json([]);
+
+        $booked = Kunjungan::where('tanggal_kunjungan', $tanggal)
+            ->where('status', 'approved')
+            ->get();
+
+        $blockedHours = [];
+        foreach ($booked as $b) {
+            $start = (int) substr($b->jam_mulai, 0, 2);
+            $end = (int) substr($b->jam_selesai, 0, 2);
+            for ($i = $start; $i < $end; $i++) {
+                $blockedHours[] = str_pad($i, 2, '0', STR_PAD_LEFT) . ':00';
+            }
+        }
+        return response()->json(array_values(array_unique($blockedHours)));
+    }
+
+    /**
+     * Batal Kunjungan
+     */
+    public function batal(Request $request, $id)
+    {
+        $kunjungan = Kunjungan::where('nomor_registrasi', $id)->firstOrFail();
+        
+        // Maksimal pembatalan H-2
+        if (now()->startOfDay()->gt($kunjungan->tanggal_kunjungan->clone()->subDays(2)->startOfDay())) {
+            return back()->with('error', 'Pembatalan ditolak. Pembatalan hanya dapat dilakukan maksimal H-2 dari tanggal kunjungan.');
+        }
+
+        $kunjungan->update(['status' => 'cancelled']);
+
+        return back()->with('success', 'Permohonan kunjungan berhasil dibatalkan secara sistem.');
     }
 
     /**

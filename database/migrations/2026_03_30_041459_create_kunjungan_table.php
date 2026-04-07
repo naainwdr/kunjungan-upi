@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('tanggal_kunjungan');
             $table->integer('jumlah_peserta');
             $table->string('file_surat')->nullable(); // path file surat permohonan
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])->default('pending');
             $table->text('catatan_admin')->nullable();
             $table->timestamp('email_notified_at')->nullable();
             $table->timestamps();

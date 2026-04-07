@@ -209,7 +209,7 @@
             <div class="sm:col-span-2 lg:col-span-1">
                 <div class="flex items-center gap-3 mb-4">
                     <img src="/images/kkipp-logo.png" alt="KKIPP UPI"
-                         class="h-14 w-auto object-contain" style="filter: brightness(0) invert(1); opacity: 0.9;">
+                         class="h-14 w-auto object-contain">
                 </div>
                 <p class="text-gray-500 text-xs leading-relaxed">
                     Kantor Komunikasi, Informasi dan Pelayanan Publik<br>
