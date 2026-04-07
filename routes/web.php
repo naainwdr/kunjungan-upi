@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [KunjunganController::class, 'index'])->name('home');
 
+Route::get('/kalender', [KunjunganController::class, 'kalender'])->name('kalender');
+
 Route::get('/reservasi', [KunjunganController::class, 'create'])->name('reservasi.create');
 Route::post('/reservasi', [KunjunganController::class, 'store'])->name('reservasi.store');
 Route::get('/reservasi/sukses', [KunjunganController::class, 'sukses'])->name('reservasi.sukses');

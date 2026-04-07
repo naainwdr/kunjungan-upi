@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Dependencies (akan di-install ulang di Docker)
+/vendor
+/node_modules
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Storage (data runtime, tidak perlu di image)
+/storage/logs/*
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+
+# Dev tools
+*.md
+*.log
+Thumbs.db
+.DS_Store
+.idea
+.vscode
+.phpunit.cache
+phpunit.xml
+
+# Testing
+/tests
+
+# Docker (jangan include Dockerfile di image itu sendiri)
+docker-compose.yml
+docker-compose.*.yml

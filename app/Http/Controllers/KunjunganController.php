@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Carbon\Carbon;
 
 class KunjunganController extends Controller
 {
@@ -20,15 +21,47 @@ class KunjunganController extends Controller
     }
 
     /**
-     * Halaman Formulir Reservasi
+     * Kalender Kunjungan
      */
-    public function create()
+    public function kalender(Request $request)
     {
-        return view('public.reservasi');
+        $year  = (int) $request->get('year',  now()->year);
+        $month = (int) $request->get('month', now()->month);
+
+        // Batasi rentang navigasi: 1 tahun ke belakang, 2 tahun ke depan
+        $year  = max(now()->year - 1, min($year, now()->year + 2));
+        $month = max(1, min($month, 12));
+
+        // Kunjungan yang sudah disetujui di bulan ini
+        $approvedVisitsList = Kunjungan::where('status', 'approved')
+            ->whereYear('tanggal_kunjungan', $year)
+            ->whereMonth('tanggal_kunjungan', $month)
+            ->orderBy('tanggal_kunjungan')
+            ->get();
+
+        // Grouped count per date: ['2026-04-15' => 2, ...]
+        $approvedVisits = $approvedVisitsList
+            ->groupBy(fn($k) => $k->tanggal_kunjungan->format('Y-m-d'))
+            ->map->count();
+
+        $holidays = $this->nationalHolidays($year);
+
+        return view('public.kalender', compact(
+            'year', 'month', 'approvedVisits', 'approvedVisitsList', 'holidays'
+        ));
     }
 
     /**
-     * Proses submit formulir reservasi
+     * Halaman Formulir Permohonan
+     */
+    public function create(Request $request)
+    {
+        $tanggal = $request->get('tanggal'); // pre-fill dari kalender
+        return view('public.reservasi', compact('tanggal'));
+    }
+
+    /**
+     * Proses submit formulir permohonan
      */
     public function store(Request $request)
     {
@@ -39,7 +72,18 @@ class KunjunganController extends Controller
             'nama_pic'          => 'required|string|max:255',
             'email'             => 'required|email|max:255',
             'telepon'           => 'required|string|max:20',
-            'tanggal_kunjungan' => 'required|date|after:today',
+            'tanggal_kunjungan' => 'required|date|after_or_equal:' . now()->addDays(7)->format('Y-m-d'),
+            'jam_mulai'         => 'required|string',
+            'jam_selesai'       => ['required', 'string', function ($attribute, $value, $fail) use ($request) {
+                if ($request->jam_mulai && $value) {
+                    $start    = (int) substr($request->jam_mulai, 0, 2);
+                    $end      = (int) substr($value, 0, 2);
+                    $duration = $end - $start;
+                    if ($duration < 2) $fail('Durasi kunjungan minimal 2 jam.');
+                    if ($duration > 5) $fail('Durasi kunjungan maksimal 5 jam.');
+                    if ($end > 16)     $fail('Kunjungan harus selesai paling lambat pukul 16:00 WIB.');
+                }
+            }],
             'jumlah_peserta'    => 'required|integer|min:1|max:500',
             'file_surat'        => 'required|file|mimes:pdf,jpg,jpeg|max:1024',
         ], [
@@ -51,7 +95,9 @@ class KunjunganController extends Controller
             'email.email'                => 'Format email tidak valid.',
             'telepon.required'           => 'Nomor telepon wajib diisi.',
             'tanggal_kunjungan.required' => 'Tanggal kunjungan wajib diisi.',
-            'tanggal_kunjungan.after'    => 'Tanggal kunjungan harus setelah hari ini.',
+            'tanggal_kunjungan.after_or_equal' => 'Tanggal kunjungan minimal 7 hari dari sekarang.',
+            'jam_mulai.required'         => 'Jam mulai kunjungan wajib dipilih.',
+            'jam_selesai.required'       => 'Jam selesai kunjungan wajib dipilih.',
             'jumlah_peserta.required'    => 'Jumlah peserta wajib diisi.',
             'jumlah_peserta.min'         => 'Jumlah peserta minimal 1 orang.',
             'jumlah_peserta.max'         => 'Jumlah peserta maksimal 500 orang.',
@@ -60,7 +106,6 @@ class KunjunganController extends Controller
             'file_surat.max'             => 'Ukuran file maksimal 1 MB.',
         ]);
 
-        // Upload file: Cloudinary (production) atau local (development)
         $filePath = $this->uploadSurat($request);
 
         $kunjungan = Kunjungan::create([
@@ -72,12 +117,13 @@ class KunjunganController extends Controller
             'email'             => $request->email,
             'telepon'           => $request->telepon,
             'tanggal_kunjungan' => $request->tanggal_kunjungan,
+            'jam_mulai'         => $request->jam_mulai,
+            'jam_selesai'       => $request->jam_selesai,
             'jumlah_peserta'    => $request->jumlah_peserta,
             'file_surat'        => $filePath,
             'status'            => 'pending',
         ]);
 
-        // Kirim email konfirmasi pendaftaran
         try {
             Mail::to($kunjungan->email)->send(new StatusKunjunganMail($kunjungan));
             $kunjungan->update(['email_notified_at' => now()]);
@@ -89,23 +135,21 @@ class KunjunganController extends Controller
     }
 
     /**
-     * Upload file surat — otomatis pilih Cloudinary (production) atau local (development)
+     * Upload file surat
      */
     private function uploadSurat(Request $request): string
     {
         $disk = config('filesystems.default');
 
         if ($disk === 'cloudinary') {
-            // Production: Upload ke Cloudinary
             $result = Cloudinary::upload($request->file('file_surat')->getRealPath(), [
                 'folder'        => 'upi-reservasi/surat',
                 'resource_type' => 'auto',
                 'public_id'     => 'surat_' . time(),
             ]);
-            return $result->getSecurePath(); // URL lengkap Cloudinary
+            return $result->getSecurePath();
         }
 
-        // Development: Simpan ke local storage
         return $request->file('file_surat')->store('surat', 'public');
     }
 
@@ -138,7 +182,7 @@ class KunjunganController extends Controller
             'query.min'      => 'Minimal 3 karakter.',
         ]);
 
-        $query = trim($request->query('query'));
+        $query = trim($request->input('query'));
 
         $kunjungan = Kunjungan::where('nomor_registrasi', $query)
             ->orWhere('email', $query)
@@ -146,5 +190,54 @@ class KunjunganController extends Controller
             ->get();
 
         return view('public.cek-status', compact('kunjungan', 'query'));
+    }
+
+    /**
+     * Daftar hari libur nasional Indonesia
+     */
+    private function nationalHolidays(int $year): array
+    {
+        $h = [
+            "$year-01-01" => "Tahun Baru Masehi",
+            "$year-05-01" => "Hari Buruh Internasional",
+            "$year-06-01" => "Hari Lahir Pancasila",
+            "$year-08-17" => "Hari Kemerdekaan RI",
+            "$year-12-25" => "Hari Raya Natal",
+            "$year-12-26" => "Cuti Bersama Natal",
+        ];
+
+        if ($year === 2026) {
+            $h += [
+                "2026-01-27" => "Isra Mi'raj Nabi Muhammad SAW",
+                "2026-01-29" => "Tahun Baru Imlek 2577",
+                "2026-03-20" => "Hari Raya Nyepi (Tahun Baru Saka 1948)",
+                "2026-03-31" => "Hari Raya Idul Fitri 1447H",
+                "2026-04-01" => "Hari Raya Idul Fitri 1447H",
+                "2026-04-02" => "Wafat Isa Al Masih",
+                "2026-04-03" => "Cuti Bersama Idul Fitri",
+                "2026-05-12" => "Hari Raya Waisak 2570",
+                "2026-05-14" => "Kenaikan Isa Al Masih",
+                "2026-06-06" => "Hari Raya Idul Adha 1447H",
+                "2026-06-07" => "Cuti Bersama Idul Adha",
+                "2026-06-27" => "Tahun Baru Islam 1448H",
+                "2026-09-05" => "Maulid Nabi Muhammad SAW",
+            ];
+        }
+
+        if ($year === 2027) {
+            $h += [
+                "2027-01-17" => "Isra Mi'raj Nabi Muhammad SAW",
+                "2027-01-27" => "Tahun Baru Imlek 2578",
+                "2027-03-09" => "Hari Raya Nyepi",
+                "2027-03-20" => "Hari Raya Idul Fitri 1448H",
+                "2027-03-21" => "Hari Raya Idul Fitri 1448H",
+                "2027-04-26" => "Wafat Isa Al Masih",
+                "2027-05-01" => "Hari Raya Waisak",
+                "2027-05-27" => "Idul Adha 1448H",
+                "2027-09-25" => "Maulid Nabi Muhammad SAW",
+            ];
+        }
+
+        return $h;
     }
 }

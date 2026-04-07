@@ -1,59 +1,80 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Kunjungan UPI - Sistem Reservasi Kunjungan Sekolah
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="300" alt="Laravel Logo">
 </p>
 
-## About Laravel
+## 📌 Deskripsi Project
+**Kunjungan UPI** adalah platform sistem reservasi kunjungan sekolah ke Universitas Pendidikan Indonesia (UPI) yang modern, efisien, dan transparan. Dibangun menggunakan teknologi terbaru, aplikasi ini mendigitalisasi proses pendaftaran kunjungan yang sebelumnya manual menjadi sistem pencatatan otomatis yang mudah diakses oleh pihak sekolah maupun admin internal UPI.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## ✨ Fitur Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 🏫 Portal Publik
+- **Landing Page Modern**: Halaman beranda yang informatif dan responsif.
+- **Kalender Kunjungan**: Lihat ketersediaan kuota dan jadwal kunjungan secara real-time.
+- **Reservasi Online**: Alur pendaftaran kunjungan dengan validasi data sekolah yang lengkap.
+- **Cek Status Mandiri**: Sekolah dapat memantau progres pengajuan (Pending, Approved, Rejected) melalui fitur cek status.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 👨‍💻 Portal Admin
+- **Dashboard Management**: Dashboard ringkasan untuk memantau trafik kunjungan.
+- **Verifikasi Kunjungan**: Sistem manajemen untuk menyetujui atau menolak permohonan kunjungan.
+- **Detail Kunjungan**: Melihat dokumen dan informasi lengkap dari sekolah yang mendaftar.
+- **Keamanan Data**: Dilengkapi sistem autentikasi untuk akses manajemen.
 
-## Learning Laravel
+## 🛠️ Tech Stack
+- **Backend**: [Laravel 12 (Stable)](https://laravel.com)
+- **PHP**: PHP 8.2 or higher
+- **Frontend**: [Tailwind CSS 4.0](https://tailwindcss.com) (Modern CSS Engine)
+- **JavaScript Engine**: Vite 7
+- **Database**: MySQL / PostgreSQL / SQLite
+- **Media Storage**: [Cloudinary Labs](https://cloudinary-laravel.com) for image & document management
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 🚀 Instalasi Lokal
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Prerequisites
+- PHP >= 8.2
+- Composer
+- Node.js & NPM
+- MySQL Server
 
-## Laravel Sponsors
+### Langkah Instalasi
+1. **Clone Repositori**
+   ```bash
+   git clone [URL-REPOSI-INI]
+   cd kunjungan-upi
+   ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+2. **Setup Server-side**
+   ```bash
+   composer install
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-### Premium Partners
+3. **Database & Migration**
+   Konfigurasi database di `.env`, lalu jalankan:
+   ```bash
+   php artisan migrate
+   ```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+4. **Setup Client-side**
+   ```bash
+   npm install
+   ```
 
-## Contributing
+5. **Jalankan Aplikasi**
+   Gunakan script custom yang tersedia di `composer.json` untuk menjalankan server dan vite sekaligus:
+   ```bash
+   npm run dev
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 📦 Deployment
+Aplikasi ini sudah dipersiapkan untuk deployment menggunakan:
+- **Docker**: Dilengkapi dengan `Dockerfile` dan konfigurasi Docker.
+- **Platform Ready**: Konfigurasi `railway.json` dan `render.yaml` tersedia untuk deployment cepat di Railway atau Render.
 
-## Code of Conduct
+## 📄 Lisensi
+Project ini bersifat open-source dan berada di bawah lisensi [MIT](LICENSE).
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+*Dikembangkan untuk Program Magang - Universitas Pendidikan Indonesia.*

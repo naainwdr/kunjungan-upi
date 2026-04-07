@@ -1,0 +1,20 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Jangan redirect file/folder yang benar-benar ada
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Semua request → index.php (Laravel router)
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Upload max 2MB (sesuai validasi Laravel)
+<IfModule mod_php.c>
+    php_value upload_max_filesize 2M
+    php_value post_max_size 3M
+    php_value memory_limit 128M
+    php_value max_execution_time 60
+</IfModule>

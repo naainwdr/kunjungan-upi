@@ -1,9 +1,10 @@
 services:
   - type: web
     name: upi-reservasi-kunjungan
-    env: php
-    buildCommand: bash build.sh
-    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    env: docker                          # ← pakai Docker, bukan PHP native
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
     envVars:
       - key: APP_NAME
         value: "Reservasi Kunjungan UPI"
@@ -12,53 +13,54 @@ services:
       - key: APP_DEBUG
         value: false
       - key: APP_KEY
-        generateValue: true
+        generateValue: true              # Render generate otomatis
       - key: APP_LOCALE
         value: id
+
+      # Database — Supabase PostgreSQL
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        fromDatabase:
-          name: upi-reservasi-db
-          property: host
+        sync: false                      # Isi manual dari Supabase
       - key: DB_PORT
-        fromDatabase:
-          name: upi-reservasi-db
-          property: port
+        value: "5432"
       - key: DB_DATABASE
-        fromDatabase:
-          name: upi-reservasi-db
-          property: database
+        value: postgres
       - key: DB_USERNAME
-        fromDatabase:
-          name: upi-reservasi-db
-          property: user
+        value: postgres
       - key: DB_PASSWORD
-        fromDatabase:
-          name: upi-reservasi-db
-          property: password
+        sync: false                      # Isi manual dari Supabase
+
+      # Cloudinary — file storage
+      - key: FILESYSTEM_DISK
+        value: cloudinary
+      - key: CLOUDINARY_URL
+        sync: false                      # Isi manual dari Cloudinary
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+
+      # Session & Cache (gunakan cookie/array, aman untuk container ephemeral)
       - key: SESSION_DRIVER
         value: cookie
       - key: CACHE_STORE
         value: array
       - key: QUEUE_CONNECTION
         value: sync
-      - key: FILESYSTEM_DISK
-        value: cloudinary
-      - key: CLOUDINARY_URL
-        sync: false   # isi manual di Render dashboard
+
+      # Mail
       - key: MAIL_MAILER
         value: log
       - key: MAIL_FROM_ADDRESS
-        value: humas@upi.edu
+        value: ninawd27@upi.edu
       - key: MAIL_FROM_NAME
-        value: "Humas UPI - Reservasi Kunjungan"
-      - key: ADMIN_EMAIL
-        value: admin@upi.edu
-      - key: ADMIN_PASSWORD
-        sync: false   # isi manual di Render dashboard
+        value: "Reservasi Kunjungan UPI"
 
-databases:
-  - name: upi-reservasi-db
-    databaseName: upi_reservasi
-    user: upi_admin
+      # Admin awal
+      - key: ADMIN_EMAIL
+        value: ninawd27@upi.edu
+      - key: ADMIN_PASSWORD
+        sync: false                      # Isi manual, jangan pakai default!

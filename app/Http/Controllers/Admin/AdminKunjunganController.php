@@ -15,11 +15,19 @@ class AdminKunjunganController extends Controller
      */
     public function dashboard(Request $request)
     {
-        $query = Kunjungan::latest();
+        $query = Kunjungan::query();
 
         // Filter status
         if ($request->filled('status') && in_array($request->status, ['pending', 'approved', 'rejected'])) {
             $query->where('status', $request->status);
+        }
+
+        // Filter tanggal kunjungan
+        if ($request->filled('tgl_dari')) {
+            $query->whereDate('tanggal_kunjungan', '>=', $request->tgl_dari);
+        }
+        if ($request->filled('tgl_sampai')) {
+            $query->whereDate('tanggal_kunjungan', '<=', $request->tgl_sampai);
         }
 
         // Search
@@ -32,7 +40,14 @@ class AdminKunjunganController extends Controller
             });
         }
 
+        // Sort
+        $sortBy  = in_array($request->sort, ['tanggal_kunjungan', 'created_at', 'jumlah_peserta', 'nama_sekolah'])
+                   ? $request->sort : 'created_at';
+        $sortDir = $request->dir === 'asc' ? 'asc' : 'desc';
+        $query->orderBy($sortBy, $sortDir);
+
         $kunjungan = $query->paginate(15)->withQueryString();
+
         $counts = [
             'all'      => Kunjungan::count(),
             'pending'  => Kunjungan::where('status', 'pending')->count(),
@@ -40,7 +55,24 @@ class AdminKunjunganController extends Controller
             'rejected' => Kunjungan::where('status', 'rejected')->count(),
         ];
 
-        return view('admin.dashboard', compact('kunjungan', 'counts'));
+        // Top 5 sekolah paling sering berkunjung (approved)
+        $topSekolah = Kunjungan::where('status', 'approved')
+            ->selectRaw('nama_sekolah, COUNT(*) as total_kunjungan, SUM(jumlah_peserta) as total_peserta')
+            ->groupBy('nama_sekolah')
+            ->orderByDesc('total_kunjungan')
+            ->limit(5)
+            ->get();
+
+        // 5 kunjungan terbaru yang disetujui
+        $recentVisits = Kunjungan::where('status', 'approved')
+            ->orderByDesc('tanggal_kunjungan')
+            ->limit(5)
+            ->get();
+
+        return view('admin.dashboard', compact(
+            'kunjungan', 'counts', 'topSekolah', 'recentVisits',
+            'sortBy', 'sortDir'
+        ));
     }
 
     /**

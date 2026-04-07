@@ -17,6 +17,8 @@ class Kunjungan extends Model
         'email',
         'telepon',
         'tanggal_kunjungan',
+        'jam_mulai',
+        'jam_selesai',
         'jumlah_peserta',
         'file_surat',
         'status',

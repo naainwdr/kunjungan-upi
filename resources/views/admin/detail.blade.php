@@ -123,24 +123,40 @@
             @if($kunjungan->status === 'pending')
             {{-- Approve --}}
             <div class="bg-white border border-green-200 rounded-xl shadow-sm p-5">
-                <h2 class="font-bold text-green-700 mb-3">✅ Setujui Pengajuan</h2>
+                <h2 class="font-bold text-green-700 mb-3">✅ Setujui Permohonan</h2>
                 <form method="POST" action="{{ route('admin.kunjungan.approve', $kunjungan) }}" id="form-approve">
                     @csrf
                     <div class="mb-3">
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Catatan (opsional)</label>
-                        <textarea name="catatan_admin" rows="3" placeholder="Instruksi atau informasi tambahan untuk sekolah..."
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Catatan untuk Sekolah (opsional)</label>
+                        <textarea name="catatan_admin" rows="3" placeholder="Contoh: Hadir pukul 09.00 WIB. Hubungi panitia di 022-2013163."
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"></textarea>
                     </div>
-                    <button type="submit" onclick="return confirm('Yakin ingin menyetujui pengajuan ini?')"
+
+                    {{-- Konfirmasi sebelum submit --}}
+                    <div id="confirm-approve" class="hidden mb-3 p-3 bg-green-50 border border-green-300 rounded-lg text-sm">
+                        <p class="text-green-800 font-medium mb-2">Yakin setujui permohonan ini?</p>
+                        <div class="flex gap-2">
+                            <button type="submit" class="flex-1 bg-green-600 text-white py-1.5 rounded font-bold text-xs hover:bg-green-700">
+                                ✓ Ya, Setujui
+                            </button>
+                            <button type="button" onclick="document.getElementById('confirm-approve').classList.add('hidden');"
+                                class="flex-1 border border-gray-300 text-gray-600 py-1.5 rounded text-xs hover:bg-gray-50">
+                                Batal
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="button"
+                        onclick="document.getElementById('confirm-approve').classList.remove('hidden'); this.classList.add('hidden');"
                         class="w-full bg-green-600 text-white py-2.5 rounded-lg font-bold text-sm hover:bg-green-700 transition-colors">
-                        Setujui Kunjungan
+                        ✓ Setujui Kunjungan
                     </button>
                 </form>
             </div>
 
             {{-- Reject --}}
             <div class="bg-white border border-red-200 rounded-xl shadow-sm p-5">
-                <h2 class="font-bold text-red-700 mb-3">❌ Tolak Pengajuan</h2>
+                <h2 class="font-bold text-red-700 mb-3">❌ Tolak Permohonan</h2>
                 <form method="POST" action="{{ route('admin.kunjungan.reject', $kunjungan) }}" id="form-reject">
                     @csrf
                     @error('catatan_admin')<p class="text-red-500 text-xs mb-2">{{ $message }}</p>@enderror
@@ -149,9 +165,25 @@
                         <textarea name="catatan_admin" rows="3" placeholder="Jelaskan alasan penolakan secara singkat..."
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" required>{{ old('catatan_admin') }}</textarea>
                     </div>
-                    <button type="submit" onclick="return confirm('Yakin ingin menolak pengajuan ini?')"
+
+                    {{-- Konfirmasi sebelum submit --}}
+                    <div id="confirm-reject" class="hidden mb-3 p-3 bg-red-50 border border-red-300 rounded-lg text-sm">
+                        <p class="text-red-800 font-medium mb-2">Yakin tolak permohonan ini?</p>
+                        <div class="flex gap-2">
+                            <button type="submit" class="flex-1 bg-red-600 text-white py-1.5 rounded font-bold text-xs hover:bg-red-700">
+                                ✓ Ya, Tolak
+                            </button>
+                            <button type="button" onclick="document.getElementById('confirm-reject').classList.add('hidden');"
+                                class="flex-1 border border-gray-300 text-gray-600 py-1.5 rounded text-xs hover:bg-gray-50">
+                                Batal
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="button"
+                        onclick="document.getElementById('confirm-reject').classList.remove('hidden'); this.classList.add('hidden');"
                         class="w-full bg-red-600 text-white py-2.5 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors">
-                        Tolak Pengajuan
+                        ✗ Tolak Permohonan
                     </button>
                 </form>
             </div>
