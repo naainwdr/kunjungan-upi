@@ -78,7 +78,7 @@ $nextYear    = $month == 12 ? $year + 1 : $year;
                     $date       = Carbon::create($year, $month, $day);
                     $dateStr    = $date->format('Y-m-d');
                     $dow        = $date->dayOfWeek; // 0=Sun,6=Sat
-                    $isWeekend  = in_array($dow, [0, 6]);
+                    $isWeekend  = in_array($dow, [0, 5, 6]); // 0=Sun, 5=Fri, 6=Sat — Senin s.d. Kamis saja
                     $isHoliday  = isset($holidays[$dateStr]);
                     $holName    = $isHoliday ? $holidays[$dateStr] : '';
                     $isPast     = $date->lt($today);
@@ -118,14 +118,18 @@ $nextYear    = $month == 12 ? $year + 1 : $year;
                         <span class="absolute top-0.5 right-0.5 text-[9px] sm:text-[10px] bg-upi-red text-white rounded px-1 py-0.5 leading-none">Hari ini</span>
                     @endif
 
-                    {{-- Holiday label --}}
+                    {{-- Holiday / Weekend label --}}
                     @if($isHoliday && !$isPast)
                         <div class="mt-0.5 text-[9px] sm:text-[10px] text-red-500 leading-tight truncate hidden sm:block" title="{{ $holName }}">
                             🔴 {{ Str::limit($holName, 12) }}
                         </div>
                         <div class="mt-0.5 text-[9px] text-red-500 sm:hidden">🔴</div>
                     @elseif($isWeekend && !$isPast)
-                        <div class="mt-0.5 text-[9px] sm:text-[10px] text-red-400"><span class="hidden sm:inline">Libur</span><span class="sm:hidden">🔴</span></div>
+                        @php $isFri = ($date->dayOfWeek == 5); @endphp
+                        <div class="mt-0.5 text-[9px] sm:text-[10px] text-red-400">
+                            <span class="hidden sm:inline">{{ $isFri ? 'Jumat' : 'Libur' }}</span>
+                            <span class="sm:hidden">🔴</span>
+                        </div>
                     @endif
 
                     {{-- Approved visit count badge --}}
@@ -148,30 +152,90 @@ $nextYear    = $month == 12 ? $year + 1 : $year;
         </div>
     </div>
 
-    {{-- Approved visits list this month --}}
-    @if($approvedVisitsList->isNotEmpty())
-    <div class="mt-8">
-        <h3 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
-            Kunjungan Disetujui — {{ $monthNames[$month-1] }} {{ $year }}
+{{-- Approved visits: tabel terurut by date, tanpa yang sudah lewat --}}
+@php
+    $today = \Carbon\Carbon::today();
+    $tomorrow = $today->copy()->addDay();
+    $upcoming  = $approvedVisitsList->filter(fn($v) => $v->tanggal_kunjungan->gte($today))
+                    ->sortBy('tanggal_kunjungan');
+    $totalAll  = $approvedVisitsList->count();
+    $totalPast = $totalAll - $upcoming->count();
+@endphp
+
+@if($totalAll > 0)
+<div class="mt-8">
+    <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-gray-700 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
+            Jadwal Kunjungan Disetujui — {{ $monthNames[$month-1] }} {{ $year }}
         </h3>
-        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-            @foreach($approvedVisitsList as $v)
-            <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                <div>
-                    <p class="font-semibold text-sm text-gray-800">{{ $v->nama_sekolah }}</p>
-                    <p class="text-xs text-gray-500 mt-0.5">
-                        📅 {{ $v->tanggal_format }}
-                        @if($v->jam_mulai) · ⏰ {{ $v->jam_mulai }}–{{ $v->jam_selesai }} WIB @endif
-                        · 👥 {{ number_format($v->jumlah_peserta) }} orang
-                    </p>
-                </div>
-                <span class="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-semibold">Disetujui</span>
-            </div>
-            @endforeach
+        @if($totalPast > 0)
+        <span class="text-xs text-gray-400">{{ $totalPast }} kunjungan sudah lewat tidak ditampilkan</span>
+        @endif
+    </div>
+
+    @if($upcoming->isEmpty())
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-5 text-center text-sm text-gray-400">
+            Semua kunjungan bulan ini sudah berlalu.
         </div>
+    @else
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tanggal</th>
+                    <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Sesi / Jam</th>
+                    <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Sekolah</th>
+                    <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Tempat</th>
+                    <th class="text-right px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Peserta</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @foreach($upcoming as $v)
+                @php
+                    $isToday   = $v->tanggal_kunjungan->isToday();
+                    $isTomorrow = $v->tanggal_kunjungan->isSameDay($tomorrow);
+                    $rowBg = $isToday   ? 'bg-yellow-50'
+                           : ($isTomorrow ? 'bg-orange-50'
+                           : 'bg-white hover:bg-gray-50');
+                    $dateCls = $isToday   ? 'text-yellow-700 font-bold'
+                             : ($isTomorrow ? 'text-orange-600 font-semibold'
+                             : 'text-gray-500');
+                @endphp
+                <tr class="{{ $rowBg }} transition-colors">
+                    <td class="px-4 py-3">
+                        <div class="{{ $dateCls }} text-sm font-semibold">{{ $v->tanggal_kunjungan->format('d M Y') }}</div>
+                        <div class="text-xs text-gray-400">{{ $v->tanggal_kunjungan->isoFormat('dddd') }}</div>
+                        @if($isToday)   <span class="text-[10px] bg-yellow-200 text-yellow-800 px-1.5 py-0.5 rounded font-bold">HARI INI</span>  @endif
+                        @if($isTomorrow) <span class="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-semibold">BESOK</span> @endif
+                    </td>
+                    <td class="px-4 py-3 hidden sm:table-cell">
+                        @if($v->sesi)
+                            <span class="text-xs bg-upi-red/10 text-upi-red px-2 py-0.5 rounded-full font-semibold">{{ $v->sesi->nama }}</span>
+                            <div class="text-xs text-gray-400 mt-0.5">{{ $v->sesi->label }}</div>
+                        @else
+                            <span class="text-gray-300">-</span>
+                        @endif
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="font-medium text-gray-800 text-sm">{{ $v->nama_sekolah }}</div>
+                        <div class="text-xs text-gray-400">{{ $v->npsn }}</div>
+                    </td>
+                    <td class="px-4 py-3 hidden md:table-cell">
+                        <div class="text-xs text-gray-600">{{ $v->tempat ?? '-' }}</div>
+                    </td>
+                    <td class="px-4 py-3 text-right hidden sm:table-cell">
+                        <span class="text-sm font-semibold text-gray-700">{{ number_format($v->jumlah_peserta) }}</span>
+                        <div class="text-xs text-gray-400">orang</div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
     @endif
+</div>
+@endif
 
 </div>
 

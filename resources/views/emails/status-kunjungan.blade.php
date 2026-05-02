@@ -1,8 +1,8 @@
 @component('mail::message')
 # {{ $kunjungan->status === 'pending' ? 'Konfirmasi Penerimaan Pengajuan' : ($kunjungan->status === 'approved' ? '🎉 Pengajuan Kunjungan Disetujui!' : '📋 Informasi Status Pengajuan Kunjungan') }}
 
-Yth. Bapak/Ibu **{{ $kunjungan->nama_pic }}**,
-{{ $kunjungan->nama_sekolah }}
+Yth. Bapak/Ibu **{{ $kunjungan->kontak->nama }}**,
+{{ $kunjungan->sekolah->nama }}
 
 ---
 
@@ -22,9 +22,11 @@ Kami menyampaikan bahwa pengajuan kunjungan sekolah Anda **tidak dapat kami pros
 | Informasi | Keterangan |
 |-----------|-----------|
 | **Nomor Registrasi** | {{ $kunjungan->nomor_registrasi }} |
-| **Nama Sekolah** | {{ $kunjungan->nama_sekolah }} |
-| **NPSN** | {{ $kunjungan->npsn }} |
+| **Nama Sekolah** | {{ $kunjungan->sekolah->nama }} |
+| **NPSN** | {{ $kunjungan->sekolah->npsn }} |
 | **Tanggal Kunjungan** | {{ $kunjungan->tanggal_format }} |
+| **Sesi** | {{ $kunjungan->sesi->label ?? '-' }} |
+| **Tempat** | {{ $kunjungan->tempat->nama ?? '-' }} |
 | **Jumlah Peserta** | {{ number_format($kunjungan->jumlah_peserta) }} orang |
 | **Status** | {{ strtoupper($kunjungan->status_label) }} |
 
@@ -43,8 +45,9 @@ Pantau Status Pengajuan
 
 Untuk pertanyaan lebih lanjut, hubungi kami:
 - 📞 **Telepon:** (022) 2013163
+- 📲 **WhatsApp:** 085133332559
 - ✉️ **Email:** humas@upi.edu
-- 🕐 **Jam Operasional:** Senin–Jumat, 08.00–16.00 WIB
+- 🕐 **Jam Operasional:** Senin–Kamis, 09.00–15.00 WIB
 
 Salam hormat,
 **Humas Universitas Pendidikan Indonesia**

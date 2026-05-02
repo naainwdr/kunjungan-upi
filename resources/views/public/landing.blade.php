@@ -90,19 +90,19 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach([
-                ['🗓️', 'Pengajuan Minimal 7 Hari',    'Permohonan harus diajukan minmal 7 hari sebelum tanggal kunjungan.',  'border-blue-500/30  bg-blue-500/5',   'text-blue-400'],
-                ['⏰', 'Jam Kerja Senin–Jumat',        'Kunjungan hanya diterima pada hari kerja, pukul 08.00–16.00 WIB.',    'border-amber-500/30 bg-amber-500/5',  'text-amber-400'],
-                ['👥', 'Kapasitas 500 Peserta',        'Maksimal 500 orang termasuk guru pendamping setiap kunjungan.',       'border-green-500/30 bg-green-500/5',  'text-green-400'],
-                ['📄', 'Surat Resmi Berkop',           'Wajib melampirkan surat permohonan berkop sekolah dan tanda tangan Kepala Sekolah.', 'border-purple-500/30 bg-purple-500/5','text-purple-400'],
-                ['🔖', 'Simpan Nomor Registrasi',      'Catat nomor registrasi Anda untuk memantau status pengajuan kapan saja.', 'border-pink-500/30 bg-pink-500/5',  'text-pink-400'],
-                ['📞', 'Butuh Bantuan?',               'Hubungi Humas UPI di (022) 2013163 atau email humas@upi.edu.', 'border-teal-500/30 bg-teal-500/5', 'text-teal-400'],
+                ['🗓️', 'Pengajuan Minimal 7 Hari',    'Permohonan harus diajukan minimal 7 hari sebelum tanggal kunjungan.',  'border-blue-500/30  bg-blue-500/5',   'text-blue-400'],
+                ['📅', 'Senin – Kamis Saja',          'Kunjungan hanya diterima pada hari Senin–Kamis, pukul 09.00–15.00 WIB. Jumat, Sabtu, Minggu, dan hari libur nasional tidak melayani kunjungan.',    'border-amber-500/30 bg-amber-500/5',  'text-amber-400'],
+                ['⏰', '2 Sesi Tersedia',              'Sesi 1: 09.00–12.00 WIB &mdash; Sesi 2: 13.00–15.00 WIB. Harap datang <strong>30 menit sebelum sesi</strong> untuk registrasi.',       'border-green-500/30 bg-green-500/5',  'text-green-400'],
+                ['🏗️', 'Pilih Tempat Sesuai Kapasitas','Tersedia: Gedung UC Lt.1 (60), Aud. FPMIPA (300), Aud. FPEB (200), Amphiteater (300), Aula PKM Lt.2 (200). Peserta disesuaikan kapasitas.', 'border-purple-500/30 bg-purple-500/5','text-purple-400'],
+                ['📄', 'Surat Resmi Berkop',           'Wajib melampirkan surat permohonan berkop sekolah dan tanda tangan Kepala Sekolah.',                     'border-pink-500/30 bg-pink-500/5',  'text-pink-400'],
+                ['📞', 'Hubungi Kami',                 'WhatsApp: <strong>085133332559</strong><br>Email: <strong>humas@upi.edu</strong><br>Telp: (022) 2013163',  'border-teal-500/30 bg-teal-500/5', 'text-teal-400'],
             ] as [$icon, $title, $desc, $card, $iconCls])
             <div class="border {{ $card }} rounded-2xl p-5 backdrop-blur-sm hover:scale-[1.02] transition-transform">
                 <div class="flex items-start gap-3">
                     <span class="text-2xl flex-shrink-0 mt-0.5">{{ $icon }}</span>
                     <div>
                         <h3 class="font-bold text-sm {{ $iconCls }} mb-1">{{ $title }}</h3>
-                        <p class="text-gray-400 text-xs leading-relaxed">{{ $desc }}</p>
+                        <p class="text-gray-400 text-xs leading-relaxed">{!! $desc !!}</p>
                     </div>
                 </div>
             </div>
@@ -124,5 +124,81 @@
         </a>
     </div>
 </section>
+
+{{-- ══════════════════════════════════════════════
+     TESTIMONI KEPUASAN
+     ══════════════════════════════════════════════ --}}
+@php
+    $testimoni = \App\Models\SurveiKepuasan::with('kunjungan.sekolah')
+        ->where('tampilkan_publik', true)
+        ->whereNotNull('komentar')
+        ->where('komentar', '!=', '')
+        ->orderByDesc('created_at')
+        ->limit(6)
+        ->get();
+@endphp
+
+@if($testimoni->isNotEmpty())
+<section class="bg-gray-50 border-t border-gray-100 py-14">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="text-center mb-10">
+            <span class="text-3xl">⭐</span>
+            <h2 class="text-2xl font-bold text-gray-800 mt-2 mb-1">Apa Kata Sekolah yang Telah Berkunjung</h2>
+            <p class="text-gray-400 text-sm">Testimoni nyata dari sekolah yang telah melakukan kunjungan ke UPI</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            @foreach($testimoni as $t)
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+                {{-- Stars --}}
+                <div class="flex items-center gap-1 mb-3">
+                    @for($i = 1; $i <= 5; $i++)
+                    <span class="{{ $i <= round($t->rating_rata) ? 'text-yellow-400' : 'text-gray-200' }} text-lg">★</span>
+                    @endfor
+                    <span class="text-xs font-bold text-gray-600 ml-1">{{ $t->rating_rata }}</span>
+                </div>
+
+                {{-- Komentar --}}
+                <blockquote class="text-gray-700 text-sm leading-relaxed mb-4 italic">
+                    "{{ Str::limit($t->komentar, 180) }}"
+                </blockquote>
+
+                {{-- Source --}}
+                <div class="flex items-center gap-3 pt-3 border-t border-gray-100">
+                    <div class="w-8 h-8 bg-upi-red/10 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-xs font-bold text-upi-red">{{ strtoupper(substr($t->kunjungan->sekolah->nama, 0, 2)) }}</span>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="font-semibold text-gray-800 text-xs truncate">{{ $t->kunjungan->sekolah->nama }}</p>
+                        <p class="text-gray-400 text-[10px]">{{ $t->kunjungan->tanggal_kunjungan->format('M Y') }}</p>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+
+        {{-- Avg rating summary --}}
+        @php
+            $avgTotal = round(\App\Models\SurveiKepuasan::avg('rating_pelayanan') +
+                               \App\Models\SurveiKepuasan::avg('rating_fasilitas') +
+                               \App\Models\SurveiKepuasan::avg('rating_informasi'), 1) / 3;
+            $totalSurvei = \App\Models\SurveiKepuasan::count();
+        @endphp
+        @if($totalSurvei > 0)
+        <div class="text-center mt-8">
+            <div class="inline-flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-6 py-3 shadow-sm">
+                <span class="text-2xl font-bold text-upi-red">{{ round($avgTotal, 1) }}</span>
+                <div class="text-left">
+                    <div class="flex gap-0.5">
+                        @for($i = 1; $i <= 5; $i++)<span class="{{ $i <= round($avgTotal) ? 'text-yellow-400' : 'text-gray-200' }}">★</span>@endfor
+                    </div>
+                    <p class="text-xs text-gray-500">dari {{ $totalSurvei }} ulasan kunjungan</p>
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
+</section>
+@endif
 
 @endsection

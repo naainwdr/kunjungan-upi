@@ -26,35 +26,40 @@
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div>
                         <dt class="text-gray-400 text-xs mb-0.5">Nama Sekolah</dt>
-                        <dd class="font-semibold text-gray-800">{{ $kunjungan->nama_sekolah }}</dd>
+                        <dd class="font-semibold text-gray-800">{{ $kunjungan->sekolah->nama }}</dd>
                     </div>
                     <div>
                         <dt class="text-gray-400 text-xs mb-0.5">NPSN</dt>
-                        <dd class="font-mono font-semibold">{{ $kunjungan->npsn }}</dd>
+                        <dd class="font-mono font-semibold">{{ $kunjungan->sekolah->npsn }}</dd>
                     </div>
                     <div class="sm:col-span-2">
                         <dt class="text-gray-400 text-xs mb-0.5">Alamat</dt>
-                        <dd class="text-gray-700">{{ $kunjungan->alamat }}</dd>
+                        <dd class="text-gray-700">{{ $kunjungan->sekolah->alamat }}</dd>
                     </div>
                     <div>
                         <dt class="text-gray-400 text-xs mb-0.5">Penanggungjawab</dt>
-                        <dd class="text-gray-700">{{ $kunjungan->nama_pic }}</dd>
+                        <dd class="text-gray-700">{{ $kunjungan->kontak->nama }} <span class="text-xs text-gray-400">({{ $kunjungan->kontak->jabatan_format }})</span></dd>
                     </div>
                     <div>
-                        <dt class="text-gray-400 text-xs mb-0.5">Telepon</dt>
-                        <dd class="text-gray-700">{{ $kunjungan->telepon }}</dd>
+                        <dt class="text-gray-400 text-xs mb-0.5">Telepon Sekolah</dt>
+                        <dd class="text-gray-700">{{ $kunjungan->sekolah->telepon }}</dd>
                     </div>
                     <div>
-                        <dt class="text-gray-400 text-xs mb-0.5">Email</dt>
-                        <dd class="text-gray-700">{{ $kunjungan->email }}</dd>
+                        <dt class="text-gray-400 text-xs mb-0.5">Email Sekolah</dt>
+                        <dd class="text-gray-700">{{ $kunjungan->sekolah->email }}</dd>
                     </div>
                     <div>
-                        <dt class="text-gray-400 text-xs mb-0.5">Email Notifikasi</dt>
+                        <dt class="text-gray-400 text-xs mb-0.5">Telepon PIC</dt>
+                        <dd class="text-gray-700">{{ $kunjungan->kontak->telepon }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-gray-400 text-xs mb-0.5">Email Notifikasi (PIC)</dt>
                         <dd>
+                            <span class="text-gray-700 text-xs">{{ $kunjungan->kontak->email }}</span>
                             @if($kunjungan->email_notified_at)
-                                <span class="text-green-600 text-xs">✓ Dikirim {{ $kunjungan->email_notified_at->diffForHumans() }}</span>
+                                <span class="text-green-600 text-xs ml-2">✓ Dikirim {{ $kunjungan->email_notified_at->diffForHumans() }}</span>
                             @else
-                                <span class="text-gray-400 text-xs">Belum dikirim</span>
+                                <span class="text-gray-400 text-xs ml-2">Belum dikirim</span>
                             @endif
                         </dd>
                     </div>
@@ -78,13 +83,13 @@
                         <dd class="font-semibold text-gray-800">{{ $kunjungan->tanggal_format }}</dd>
                     </div>
                     <div>
-                        <dt class="text-gray-400 text-xs mb-0.5">Jam Kunjungan</dt>
-                        <dd class="font-semibold text-gray-800">
-                            @if($kunjungan->jam_mulai)
-                                {{ $kunjungan->jam_mulai }} – {{ $kunjungan->jam_selesai }} WIB
-                            @else
-                                <span class="text-gray-400 italic">Belum ditentukan</span>
-                            @endif
+                        <dt class="text-gray-400 text-xs mb-0.5">Sesi</dt>
+                        <dd class="font-semibold text-gray-800">{{ $kunjungan->sesi->label ?? '-' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-gray-400 text-xs mb-0.5">Tempat</dt>
+                        <dd class="text-gray-700">{{ $kunjungan->tempat->nama ?? '-' }}
+                            @if($kunjungan->tempat) <span class="text-xs text-gray-400">(Kap. {{ number_format($kunjungan->tempat->kapasitas) }})</span> @endif
                         </dd>
                     </div>
                     <div>
@@ -204,6 +209,84 @@
                 <p class="font-bold text-green-700 text-sm">Pengajuan Telah Disetujui</p>
                 <p class="text-green-600 text-xs mt-1">{{ $kunjungan->updated_at->diffForHumans() }}</p>
             </div>
+
+            {{-- Presensi Check-In / Check-Out --}}
+            @php $presensi = $kunjungan->presensi; @endphp
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+                <h2 class="font-bold text-gray-800 mb-3 flex items-center gap-2">📋 Presensi</h2>
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div class="bg-green-50 border border-green-100 rounded-lg p-2 text-center">
+                        <p class="text-[10px] text-green-500 font-semibold uppercase">Check-In</p>
+                        <p class="font-bold text-green-700 text-sm">{{ $presensi?->waktu_masuk?->format('H:i') ?? '-' }}</p>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-100 rounded-lg p-2 text-center">
+                        <p class="text-[10px] text-blue-500 font-semibold uppercase">Check-Out</p>
+                        <p class="font-bold text-blue-700 text-sm">{{ $presensi?->waktu_keluar?->format('H:i') ?? '-' }}</p>
+                    </div>
+                </div>
+                @if(!$presensi || !$presensi->waktu_masuk)
+                <form method="POST" action="{{ route('admin.presensi.checkin', $kunjungan) }}">
+                    @csrf
+                    <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-green-700 transition-colors">
+                        ✅ Check-In Sekarang
+                    </button>
+                </form>
+                @elseif($presensi->waktu_masuk && !$presensi->waktu_keluar)
+                <form method="POST" action="{{ route('admin.presensi.checkout', $kunjungan) }}">
+                    @csrf
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition-colors">
+                        🚪 Check-Out Sekarang
+                    </button>
+                </form>
+                @else
+                <div class="text-center">
+                    <span class="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full">🏁 Kunjungan Selesai · {{ $presensi->durasi }}</span>
+                    @if($kunjungan->survei)
+                    <p class="text-xs text-gray-400 mt-1.5">Survei: <span class="text-yellow-500">{{ $kunjungan->survei->bintang }}</span> ({{ $kunjungan->survei->rating_rata }}★)</p>
+                    @else
+                    <p class="text-xs text-gray-400 mt-1.5">Survei belum diisi.</p>
+                    @endif
+                </div>
+                @endif
+            </div>
+
+            {{-- Tiket --}}
+            <a href="{{ route('tiket.show', $kunjungan->nomor_registrasi) }}" target="_blank"
+                class="block text-center bg-gray-100 border border-gray-200 rounded-xl py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-200 transition-colors">
+                🎫 Lihat Tiket QR
+            </a>
+
+            {{-- Mark as Completed --}}
+            @if($kunjungan->tanggal_kunjungan->isPast() || $kunjungan->tanggal_kunjungan->isToday())
+            <div class="bg-blue-50 border border-blue-200 rounded-xl shadow-sm p-5">
+                <h2 class="font-bold text-blue-700 mb-3">🏁 Tandai Kunjungan Selesai</h2>
+                <p class="text-blue-600 text-xs mb-4">Kunjungan telah berlangsung. Tandai sebagai selesai untuk mengirim form evaluasi ke PIC.</p>
+                <form method="POST" action="{{ route('admin.kunjungan.complete', $kunjungan) }}" id="form-complete">
+                    @csrf
+
+                    {{-- Konfirmasi sebelum submit --}}
+                    <div id="confirm-complete" class="hidden mb-3 p-3 bg-blue-50 border border-blue-300 rounded-lg text-sm">
+                        <p class="text-blue-800 font-medium mb-2">Yakin tandai kunjungan ini sebagai selesai?</p>
+                        <p class="text-blue-600 text-xs mb-3">Form evaluasi akan dikirim ke email PIC: {{ $kunjungan->kontak->email }}</p>
+                        <div class="flex gap-2">
+                            <button type="submit" class="flex-1 bg-blue-600 text-white py-1.5 rounded font-bold text-xs hover:bg-blue-700">
+                                ✓ Ya, Tandai Selesai
+                            </button>
+                            <button type="button" onclick="document.getElementById('confirm-complete').classList.add('hidden');"
+                                class="flex-1 border border-gray-300 text-gray-600 py-1.5 rounded text-xs hover:bg-gray-50">
+                                Batal
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="button"
+                        onclick="document.getElementById('confirm-complete').classList.remove('hidden'); this.classList.add('hidden');"
+                        class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 transition-colors">
+                        🏁 Tandai Kunjungan Selesai
+                    </button>
+                </form>
+            </div>
+            @endif
             @elseif($kunjungan->status === 'rejected')
             <div class="bg-red-50 border border-red-200 rounded-xl p-5 text-center">
                 <div class="text-3xl mb-2">❌</div>
@@ -215,6 +298,12 @@
                 <div class="text-3xl mb-2">🗑️</div>
                 <p class="font-bold text-gray-700 text-sm">Dibatalkan oleh Pengguna</p>
                 <p class="text-gray-600 text-xs mt-1">{{ $kunjungan->updated_at->diffForHumans() }}</p>
+            </div>
+            @elseif($kunjungan->status === 'completed')
+            <div class="bg-purple-50 border border-purple-200 rounded-xl p-5 text-center">
+                <div class="text-3xl mb-2">🏁</div>
+                <p class="font-bold text-purple-700 text-sm">Kunjungan Telah Selesai</p>
+                <p class="text-purple-600 text-xs mt-1">{{ $kunjungan->updated_at->diffForHumans() }}</p>
             </div>
             @endif
 

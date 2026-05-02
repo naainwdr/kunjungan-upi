@@ -231,6 +231,10 @@
                         <span class="w-7 h-7 bg-gray-800 group-hover:bg-upi-red rounded-lg flex items-center justify-center transition-colors flex-shrink-0">📞</span>
                         (022) 2013163
                     </a>
+                    <a href="https://wa.me/6285133332559" target="_blank" class="flex items-center gap-2.5 text-gray-400 hover:text-white transition-colors text-xs group">
+                        <span class="w-7 h-7 bg-gray-800 group-hover:bg-green-600 rounded-lg flex items-center justify-center transition-colors flex-shrink-0">📲</span>
+                        085133332559 (WA)
+                    </a>
                     <a href="mailto:humas@upi.edu" class="flex items-center gap-2.5 text-gray-400 hover:text-white transition-colors text-xs group">
                         <span class="w-7 h-7 bg-gray-800 group-hover:bg-upi-red rounded-lg flex items-center justify-center transition-colors flex-shrink-0">✉️</span>
                         humas@upi.edu
@@ -242,8 +246,8 @@
                 </div>
                 <div class="mt-4 bg-gray-900 rounded-xl p-3 border border-gray-800">
                     <p class="text-xs text-gray-500 font-semibold mb-1">⏰ JAM OPERASIONAL</p>
-                    <p class="text-xs text-gray-300">Sen – Jum: 08.00 – 16.00 WIB</p>
-                    <p class="text-xs text-gray-500 mt-0.5">Sabtu, Minggu & Libur: Tutup</p>
+                    <p class="text-xs text-gray-300">Sen – Kam: 09.00 – 15.00 WIB</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Jumat, Sabtu, Minggu & Libur: Tutup</p>
                 </div>
             </div>
 

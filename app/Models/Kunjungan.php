@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Kunjungan extends Model
 {
@@ -10,16 +12,15 @@ class Kunjungan extends Model
 
     protected $fillable = [
         'nomor_registrasi',
-        'nama_sekolah',
-        'npsn',
-        'alamat',
-        'nama_pic',
-        'email',
-        'telepon',
+        'sekolah_id',
+        'kontak_id',
+        'tempat_id',
+        'sesi_id',
         'tanggal_kunjungan',
-        'jam_mulai',
-        'jam_selesai',
         'jumlah_peserta',
+        'jumlah_kepsek',
+        'jumlah_guru',
+        'jumlah_tendik',
         'file_surat',
         'status',
         'catatan_admin',
@@ -31,21 +32,48 @@ class Kunjungan extends Model
         'email_notified_at' => 'datetime',
     ];
 
-    /**
-     * Generate nomor registrasi unik: UPI-YYYYMMDD-XXXX
-     */
-    public static function generateNomorRegistrasi(): string
+    // ── Relations ──────────────────────────────────────────────
+
+    public function sekolah(): BelongsTo
     {
-        $prefix = 'UPI-' . now()->format('Ymd') . '-';
-        $lastReg = static::where('nomor_registrasi', 'like', $prefix . '%')
-            ->orderByDesc('id')
-            ->first();
+        return $this->belongsTo(Sekolah::class, 'sekolah_id');
+    }
 
-        $sequence = $lastReg
-            ? (int) substr($lastReg->nomor_registrasi, -4) + 1
-            : 1;
+    public function kontak(): BelongsTo
+    {
+        return $this->belongsTo(KontakSekolah::class, 'kontak_id');
+    }
 
-        return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    public function tempat(): BelongsTo
+    {
+        return $this->belongsTo(Tempat::class, 'tempat_id');
+    }
+
+    public function sesi(): BelongsTo
+    {
+        return $this->belongsTo(Sesi::class, 'sesi_id');
+    }
+
+    public function logs(): HasMany
+    {
+        return $this->hasMany(KunjunganLog::class, 'kunjungan_id')->orderByDesc('created_at');
+    }
+
+    public function presensi(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(KunjunganPresensi::class, 'kunjungan_id');
+    }
+
+    public function survei(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(SurveiKepuasan::class, 'kunjungan_id');
+    }
+
+    // ── Accessors ──────────────────────────────────────────────
+
+    public function getTanggalFormatAttribute(): string
+    {
+        return $this->tanggal_kunjungan->isoFormat('dddd, D MMMM Y');
     }
 
     public function getStatusLabelAttribute(): string
@@ -55,6 +83,7 @@ class Kunjungan extends Model
             'approved'  => 'Disetujui',
             'rejected'  => 'Ditolak',
             'cancelled' => 'Dibatalkan',
+            'completed' => 'Selesai',
             default     => 'Tidak Diketahui',
         };
     }
@@ -66,19 +95,33 @@ class Kunjungan extends Model
             'approved'  => 'bg-green-100 text-green-800',
             'rejected'  => 'bg-red-100 text-red-800',
             'cancelled' => 'bg-gray-200 text-gray-700',
+            'completed' => 'bg-purple-100 text-purple-800',
             default     => 'bg-gray-100 text-gray-800',
         };
     }
 
-    public function getTanggalFormatAttribute(): string
-    {
-        $bulan = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
-        ];
+    // ── Helpers ─────────────────────────────────────────────────
 
-        $tgl = $this->tanggal_kunjungan;
-        return $tgl->day . ' ' . $bulan[$tgl->month] . ' ' . $tgl->year;
+    public static function generateNomorRegistrasi(): string
+    {
+        $prefix = 'UPI-' . now()->format('Ymd') . '-';
+        $last   = static::where('nomor_registrasi', 'like', $prefix . '%')
+                        ->orderByDesc('id')->first();
+        $seq    = $last ? (int) substr($last->nomor_registrasi, -4) + 1 : 1;
+        return $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Catat perubahan status ke kunjungan_log
+     */
+    public function logStatus(string $baru, ?string $catatan = null, ?int $adminId = null): void
+    {
+        KunjunganLog::create([
+            'kunjungan_id'   => $this->id,
+            'status_sebelum' => $this->status,
+            'status_sesudah' => $baru,
+            'catatan'        => $catatan,
+            'changed_by'     => $adminId,
+        ]);
     }
 }

@@ -55,8 +55,8 @@
                                     {{ $item->status_label }}
                                 </span>
                             </div>
-                            <h2 class="font-bold text-gray-800 text-base">{{ $item->nama_sekolah }}</h2>
-                            <p class="text-gray-500 text-sm mt-0.5">NPSN: {{ $item->npsn }} &bull; {{ $item->alamat }}</p>
+                            <h2 class="font-bold text-gray-800 text-base">{{ $item->sekolah->nama }}</h2>
+                            <p class="text-gray-500 text-sm mt-0.5">NPSN: {{ $item->sekolah->npsn }} &bull; {{ $item->sekolah->alamat }}</p>
 
                             <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
                                 <div>
@@ -64,12 +64,20 @@
                                     <p class="font-medium">{{ $item->tanggal_format }}</p>
                                 </div>
                                 <div>
+                                    <span class="text-gray-400 text-xs">Sesi</span>
+                                    <p class="font-medium">{{ $item->sesi?->label ?? '-' }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-gray-400 text-xs">Tempat</span>
+                                    <p class="font-medium">{{ $item->tempat?->nama ?? '-' }}</p>
+                                </div>
+                                <div>
                                     <span class="text-gray-400 text-xs">Jumlah Peserta</span>
                                     <p class="font-medium">{{ number_format($item->jumlah_peserta) }} orang</p>
                                 </div>
                                 <div>
                                     <span class="text-gray-400 text-xs">Penanggungjawab</span>
-                                    <p class="font-medium">{{ $item->nama_pic }}</p>
+                                    <p class="font-medium">{{ $item->kontak?->nama ?? '-' }}</p>
                                 </div>
                                 <div>
                                     <span class="text-gray-400 text-xs">Diajukan</span>
@@ -88,8 +96,8 @@
 
                     @if($item->status === 'approved')
                     <div class="mt-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
-                        ✅ <strong>Selamat!</strong> Kunjungan Anda telah disetujui. Silakan datang sesuai jadwal yang telah ditentukan.
-                        Hubungi Humas UPI di (022) 2013163 untuk informasi lebih lanjut.
+                        ✅ <strong>Selamat!</strong> Kunjungan Anda telah disetujui. Silakan datang sesuai jadwal.
+                        Hubungi kami: 📲 <a href="https://wa.me/6285133332559" target="_blank" class="font-semibold hover:underline">085133332559</a> atau ✉️ humas@upi.edu
                     </div>
                     @elseif($item->status === 'rejected')
                     <div class="mt-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-800">
@@ -99,16 +107,32 @@
                     <div class="mt-3 bg-gray-100 border border-gray-300 rounded-lg px-4 py-3 text-sm text-gray-700">
                         🛑 Pengajuan kunjungan ini telah dibatalkan secara mandiri.
                     </div>
+                    @elseif($item->status === 'completed')
+                    <div class="mt-3 bg-purple-50 border border-purple-200 rounded-lg px-4 py-3 text-sm text-purple-800">
+                        🏁 Kunjungan telah selesai. Terima kasih telah menggunakan layanan UPI.
+                    </div>
+                    @if($item->updated_at->diffInDays(now()) <= 7)
+                    <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <p class="text-sm text-gray-600">Form evaluasi tersedia selama 7 hari setelah kunjungan selesai.</p>
+                        <a href="{{ route('evaluasi.form', ['id' => $item->nomor_registrasi]) }}" class="inline-flex items-center justify-center bg-upi-blue text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
+                            Isi Form Evaluasi
+                        </a>
+                    </div>
+                    @else
+                    <div class="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 text-sm text-yellow-800">
+                        ⚠️ Form evaluasi sudah tidak tersedia lagi karena sudah lewat 7 hari sejak kelengkapan kunjungan.
+                    </div>
+                    @endif
                     @endif
 
                     {{-- Action for Cancellation --}}
                     @if(in_array($item->status, ['pending', 'approved']))
-                        @if(now()->startOfDay()->lte($item->tanggal_kunjungan->clone()->subDays(2)->startOfDay()))
+                        @if(now()->startOfDay()->lte($item->tanggal_kunjungan->clone()->subDays(7)->startOfDay()))
                             <div class="mt-4 border-t border-gray-100 pt-4">
                                 <button type="button" onclick="document.getElementById('modal-cancel-{{ $item->nomor_registrasi }}').classList.remove('hidden')" class="bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
                                     🗑️ Batalkan Permohonan
                                 </button>
-                                <p class="text-xs text-gray-400 mt-1">Sistem kami mencatat Anda masih dapat membatalkan. (Maksimal H-2)</p>
+                                <p class="text-xs text-gray-400 mt-1">Pembatalan hanya dapat dilakukan sampai <strong>H-7</strong> sebelum kunjungan.</p>
                             </div>
 
                             {{-- MODAL CANCEL --}}
@@ -133,8 +157,11 @@
                             </div>
                         @else
                             <div class="mt-4 pt-4 border-t border-gray-100">
-                                <p class="text-xs text-red-500 font-semibold">⚠️ Batas waktu pembatalan online telah lewat.</p>
-                                <p class="text-xs text-gray-500">Maksimal pembatalan dilakukan pada H-2 tanggal kunjungan. Jika batal hadir, pihak sekolah berpotensi menerima sanksi teguran kecuali melakukan konfirmasi darurat ke Humas UPI di (022) 2013163.</p>
+                                <p class="text-xs text-red-500 font-semibold">⚠️ Batas waktu pembatalan online telah lewat (H-7).</p>
+                                <p class="text-xs text-gray-500">Jika batal hadir, segera hubungi Humas UPI:<br>
+                                    📲 WhatsApp: <a href="https://wa.me/6285133332559" target="_blank" class="text-green-600 font-semibold hover:underline">085133332559</a> &bull;
+                                    ✉️ <a href="mailto:humas@upi.edu" class="text-blue-600 hover:underline">humas@upi.edu</a>
+                                </p>
                             </div>
                         @endif
                     @endif

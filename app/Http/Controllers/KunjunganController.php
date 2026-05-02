@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kunjungan;
+use App\Models\Sekolah;
+use App\Models\KontakSekolah;
+use App\Models\Tempat;
+use App\Models\Sesi;
 use App\Mail\StatusKunjunganMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -12,139 +16,163 @@ use Carbon\Carbon;
 
 class KunjunganController extends Controller
 {
-    /**
-     * Halaman Landing Page
-     */
+    /** Landing Page */
     public function index()
     {
         return view('public.landing');
     }
 
-    /**
-     * Kalender Kunjungan
-     */
+    /** Kalender Kunjungan */
     public function kalender(Request $request)
     {
         $year  = (int) $request->get('year',  now()->year);
         $month = (int) $request->get('month', now()->month);
-
-        // Batasi rentang navigasi: 1 tahun ke belakang, 2 tahun ke depan
         $year  = max(now()->year - 1, min($year, now()->year + 2));
         $month = max(1, min($month, 12));
 
-        // Kunjungan yang sudah disetujui di bulan ini
-        $approvedVisitsList = Kunjungan::where('status', 'approved')
+        $approvedVisitsList = Kunjungan::with(['sekolah', 'sesi', 'tempat'])
+            ->where('status', 'approved')
             ->whereYear('tanggal_kunjungan', $year)
             ->whereMonth('tanggal_kunjungan', $month)
             ->orderBy('tanggal_kunjungan')
             ->get();
 
-        // Grouped count per date: ['2026-04-15' => 2, ...]
         $approvedVisits = $approvedVisitsList
             ->groupBy(fn($k) => $k->tanggal_kunjungan->format('Y-m-d'))
             ->map->count();
 
-        $holidays = $this->nationalHolidays($year);
+        $holidays    = $this->nationalHolidays($year);
+        $servicedays = [1, 2, 3, 4]; // Senin–Kamis
 
         return view('public.kalender', compact(
-            'year', 'month', 'approvedVisits', 'approvedVisitsList', 'holidays'
+            'year', 'month', 'approvedVisits', 'approvedVisitsList', 'holidays', 'servicedays'
         ));
     }
 
-    /**
-     * Halaman Formulir Permohonan
-     */
+    /** Form Permohonan */
     public function create(Request $request)
     {
-        $tanggal = $request->get('tanggal'); // pre-fill dari kalender
-        return view('public.reservasi', compact('tanggal'));
+        $tanggal = $request->get('tanggal');
+        $tempat  = Tempat::where('aktif', true)->get();
+        $sesi    = Sesi::where('aktif', true)->orderBy('jam_mulai')->get();
+        return view('public.reservasi', compact('tanggal', 'tempat', 'sesi'));
     }
 
-    /**
-     * Proses submit formulir permohonan
-     */
+    /** Simpan Permohonan */
     public function store(Request $request)
     {
         $request->validate([
             'nama_sekolah'      => 'required|string|max:255',
             'npsn'              => 'required|string|max:20',
             'alamat'            => 'required|string|max:500',
+            'email_sekolah'     => 'required|email|max:255',
+            'telepon_sekolah'   => 'required|string|max:20',
             'nama_pic'          => 'required|string|max:255',
-            'email'             => 'required|email|max:255',
-            'telepon'           => 'required|string|max:20',
+            'jabatan_pic'       => 'required|in:kepsek,guru,tendik',
+            'email_pic'         => 'required|email|max:255',
+            'telepon_pic'       => 'required|string|max:20',
             'tanggal_kunjungan' => 'required|date|after_or_equal:' . now()->addDays(7)->format('Y-m-d'),
-            'jam_mulai'         => 'required|string',
-            'jam_selesai'       => ['required', 'string', function ($attribute, $value, $fail) use ($request) {
-                if ($request->jam_mulai && $value) {
-                    $start    = (int) substr($request->jam_mulai, 0, 2);
-                    $end      = (int) substr($value, 0, 2);
-                    $duration = $end - $start;
-                    if ($duration < 2) $fail('Durasi kunjungan minimal 2 jam.');
-                    if ($duration > 5) $fail('Durasi kunjungan maksimal 5 jam.');
-                    if ($end > 16)     $fail('Kunjungan harus selesai paling lambat pukul 16:00 WIB.');
-                }
-            }],
-            'jumlah_peserta'    => 'required|integer|min:1|max:500',
+            'sesi_id'           => 'required|exists:sesi,id',
+            'tempat_id'         => 'required|exists:tempat,id',
+            'jumlah_peserta'    => 'required|integer|min:1',
+            'jumlah_kepsek'     => 'nullable|integer|min:0',
+            'jumlah_guru'       => 'nullable|integer|min:0',
+            'jumlah_tendik'     => 'nullable|integer|min:0',
             'file_surat'        => 'required|file|mimes:pdf,jpg,jpeg|max:1024',
         ], [
             'nama_sekolah.required'      => 'Nama sekolah wajib diisi.',
             'npsn.required'              => 'NPSN wajib diisi.',
             'alamat.required'            => 'Alamat sekolah wajib diisi.',
+            'email_sekolah.required'     => 'Email sekolah wajib diisi.',
+            'telepon_sekolah.required'   => 'Nomor telepon sekolah wajib diisi.',
             'nama_pic.required'          => 'Nama penanggungjawab wajib diisi.',
-            'email.required'             => 'Email wajib diisi.',
-            'email.email'                => 'Format email tidak valid.',
-            'telepon.required'           => 'Nomor telepon wajib diisi.',
+            'jabatan_pic.required'       => 'Jabatan penanggungjawab wajib dipilih.',
+            'email_pic.required'         => 'Email penanggungjawab wajib diisi.',
+            'telepon_pic.required'       => 'Nomor telepon penanggungjawab wajib diisi.',
             'tanggal_kunjungan.required' => 'Tanggal kunjungan wajib diisi.',
             'tanggal_kunjungan.after_or_equal' => 'Tanggal kunjungan minimal 7 hari dari sekarang.',
-            'jam_mulai.required'         => 'Jam mulai kunjungan wajib dipilih.',
-            'jam_selesai.required'       => 'Jam selesai kunjungan wajib dipilih.',
+            'sesi_id.required'           => 'Sesi kunjungan wajib dipilih.',
+            'sesi_id.exists'             => 'Sesi tidak valid.',
+            'tempat_id.required'         => 'Tempat kunjungan wajib dipilih.',
+            'tempat_id.exists'           => 'Tempat tidak valid.',
             'jumlah_peserta.required'    => 'Jumlah peserta wajib diisi.',
             'jumlah_peserta.min'         => 'Jumlah peserta minimal 1 orang.',
-            'jumlah_peserta.max'         => 'Jumlah peserta maksimal 500 orang.',
             'file_surat.required'        => 'Surat permohonan wajib diunggah.',
             'file_surat.mimes'           => 'Format file harus PDF atau JPG.',
             'file_surat.max'             => 'Ukuran file maksimal 1 MB.',
         ]);
 
-        // Validasi overlap jam kunjungan
-        $startReq = (int) substr($request->jam_mulai, 0, 2);
-        $endReq   = (int) substr($request->jam_selesai, 0, 2);
-        
-        $overlapping = Kunjungan::where('tanggal_kunjungan', $request->tanggal_kunjungan)
-            ->where('status', 'approved')
-            ->get()
-            ->contains(function ($visit) use ($startReq, $endReq) {
-                $startB = (int) substr($visit->jam_mulai, 0, 2);
-                $endB   = (int) substr($visit->jam_selesai, 0, 2);
-                return ($startReq < $endB && $startB < $endReq);
-            });
-
-        if ($overlapping) {
+        // Validasi: hanya Senin–Kamis
+        $tglObj = Carbon::parse($request->tanggal_kunjungan);
+        if (!in_array($tglObj->dayOfWeek, [1, 2, 3, 4])) {
             return back()->withInput()->withErrors([
-                'jam_mulai' => 'Jadwal jam bentrok dengan kunjungan lain yang sudah disetujui. Silakan pilih hari atau jam lain.'
+                'tanggal_kunjungan' => 'Kunjungan hanya dilayani pada hari Senin hingga Kamis.'
             ]);
         }
+
+        // Validasi kapasitas tempat
+        $tempatObj = Tempat::findOrFail($request->tempat_id);
+        if ($request->jumlah_peserta > $tempatObj->kapasitas) {
+            return back()->withInput()->withErrors([
+                'jumlah_peserta' => "Kapasitas tempat yang dipilih maksimal {$tempatObj->kapasitas} orang."
+            ]);
+        }
+
+        // Validasi sesi bentrok
+        $bentrok = Kunjungan::where('tanggal_kunjungan', $request->tanggal_kunjungan)
+            ->where('status', 'approved')
+            ->where('sesi_id', $request->sesi_id)
+            ->where('tempat_id', $request->tempat_id)
+            ->exists();
+
+        if ($bentrok) {
+            return back()->withInput()->withErrors([
+                'sesi_id' => 'Sesi dan tempat yang dipilih sudah penuh pada tanggal tersebut. Pilih sesi atau tempat lain.'
+            ]);
+        }
+
+        // Upsert Sekolah by NPSN
+        $sekolah = Sekolah::updateOrCreate(
+            ['npsn' => $request->npsn],
+            [
+                'nama'    => $request->nama_sekolah,
+                'alamat'  => $request->alamat,
+                'email'   => $request->email_sekolah,
+                'telepon' => $request->telepon_sekolah,
+            ]
+        );
+
+        // Buat kontak baru untuk permohonan ini
+        $kontak = KontakSekolah::create([
+            'sekolah_id' => $sekolah->id,
+            'nama'       => $request->nama_pic,
+            'jabatan'    => $request->jabatan_pic,
+            'email'      => $request->email_pic,
+            'telepon'    => $request->telepon_pic,
+        ]);
 
         $filePath = $this->uploadSurat($request);
 
         $kunjungan = Kunjungan::create([
             'nomor_registrasi'  => Kunjungan::generateNomorRegistrasi(),
-            'nama_sekolah'      => $request->nama_sekolah,
-            'npsn'              => $request->npsn,
-            'alamat'            => $request->alamat,
-            'nama_pic'          => $request->nama_pic,
-            'email'             => $request->email,
-            'telepon'           => $request->telepon,
+            'sekolah_id'        => $sekolah->id,
+            'kontak_id'         => $kontak->id,
+            'tempat_id'         => $request->tempat_id,
+            'sesi_id'           => $request->sesi_id,
             'tanggal_kunjungan' => $request->tanggal_kunjungan,
-            'jam_mulai'         => $request->jam_mulai,
-            'jam_selesai'       => $request->jam_selesai,
             'jumlah_peserta'    => $request->jumlah_peserta,
+            'jumlah_kepsek'     => $request->jumlah_kepsek ?? 0,
+            'jumlah_guru'       => $request->jumlah_guru ?? 0,
+            'jumlah_tendik'     => $request->jumlah_tendik ?? 0,
             'file_surat'        => $filePath,
             'status'            => 'pending',
         ]);
 
+        // Log status awal
+        $kunjungan->logStatus('pending', 'Permohonan baru diajukan.');
+
         try {
-            Mail::to($kunjungan->email)->send(new StatusKunjunganMail($kunjungan));
+            Mail::to($kontak->email)->send(new StatusKunjunganMail($kunjungan));
             $kunjungan->update(['email_notified_at' => now()]);
         } catch (\Exception $e) {
             \Log::warning('Gagal kirim email: ' . $e->getMessage());
@@ -153,13 +181,10 @@ class KunjunganController extends Controller
         return redirect()->route('reservasi.sukses', ['id' => $kunjungan->nomor_registrasi]);
     }
 
-    /**
-     * Upload file surat
-     */
+    /** Upload file surat */
     private function uploadSurat(Request $request): string
     {
         $disk = config('filesystems.default');
-
         if ($disk === 'cloudinary') {
             $result = Cloudinary::uploadApi()->upload($request->file('file_surat')->getRealPath(), [
                 'folder'        => 'upi-reservasi/surat',
@@ -168,70 +193,25 @@ class KunjunganController extends Controller
             ]);
             return $result['secure_url'];
         }
-
         return $request->file('file_surat')->store('surat', 'public');
     }
 
-    /**
-     * Halaman sukses setelah submit
-     */
+    /** Sukses */
     public function sukses(Request $request)
     {
-        $kunjungan = Kunjungan::where('nomor_registrasi', $request->query('id'))->firstOrFail();
+        $kunjungan = Kunjungan::with(['sekolah', 'kontak', 'sesi', 'tempat'])
+            ->where('nomor_registrasi', $request->query('id'))
+            ->firstOrFail();
         return view('public.sukses', compact('kunjungan'));
     }
 
-    /**
-     * Halaman cek status
-     */
+    /** Cek Status (form) */
     public function cekStatus()
     {
         return view('public.cek-status');
     }
 
-    /**
-     * API Ambil data jam yang terbooking di tanggal tertentu
-     */
-    public function bookedHours(Request $request)
-    {
-        $tanggal = $request->query('tanggal');
-        if (!$tanggal) return response()->json([]);
-
-        $booked = Kunjungan::where('tanggal_kunjungan', $tanggal)
-            ->where('status', 'approved')
-            ->get();
-
-        $blockedHours = [];
-        foreach ($booked as $b) {
-            $start = (int) substr($b->jam_mulai, 0, 2);
-            $end = (int) substr($b->jam_selesai, 0, 2);
-            for ($i = $start; $i < $end; $i++) {
-                $blockedHours[] = str_pad($i, 2, '0', STR_PAD_LEFT) . ':00';
-            }
-        }
-        return response()->json(array_values(array_unique($blockedHours)));
-    }
-
-    /**
-     * Batal Kunjungan
-     */
-    public function batal(Request $request, $id)
-    {
-        $kunjungan = Kunjungan::where('nomor_registrasi', $id)->firstOrFail();
-        
-        // Maksimal pembatalan H-2
-        if (now()->startOfDay()->gt($kunjungan->tanggal_kunjungan->clone()->subDays(2)->startOfDay())) {
-            return back()->with('error', 'Pembatalan ditolak. Pembatalan hanya dapat dilakukan maksimal H-2 dari tanggal kunjungan.');
-        }
-
-        $kunjungan->update(['status' => 'cancelled']);
-
-        return back()->with('success', 'Permohonan kunjungan berhasil dibatalkan secara sistem.');
-    }
-
-    /**
-     * Proses pencarian status
-     */
+    /** Cari Status */
     public function cariStatus(Request $request)
     {
         $request->validate([
@@ -241,19 +221,91 @@ class KunjunganController extends Controller
             'query.min'      => 'Minimal 3 karakter.',
         ]);
 
-        $query = trim($request->input('query'));
+        $q = trim($request->input('query'));
 
-        $kunjungan = Kunjungan::where('nomor_registrasi', $query)
-            ->orWhere('email', $query)
+        $kunjungan = Kunjungan::with(['sekolah', 'kontak', 'sesi', 'tempat'])
+            ->where('nomor_registrasi', $q)
+            ->orWhereHas('kontak', fn($qb) => $qb->where('email', $q))
+            ->orWhereHas('sekolah', fn($qb) => $qb->where('email', $q))
             ->latest()
             ->get();
 
-        return view('public.cek-status', compact('kunjungan', 'query'));
+        return view('public.cek-status', compact('kunjungan', 'q'));
     }
 
-    /**
-     * Daftar hari libur nasional Indonesia
-     */
+    /** Batalkan Kunjungan */
+    public function batal(Request $request, $id)
+    {
+        $kunjungan = Kunjungan::where('nomor_registrasi', $id)->firstOrFail();
+
+        if (now()->startOfDay()->gt($kunjungan->tanggal_kunjungan->clone()->subDays(7)->startOfDay())) {
+            return back()->with('error', 'Pembatalan ditolak. Batas pembatalan adalah H-7 sebelum kunjungan.');
+        }
+
+        $kunjungan->logStatus('cancelled', 'Dibatalkan oleh pemohon.');
+        $kunjungan->update(['status' => 'cancelled']);
+
+        return back()->with('success', 'Permohonan kunjungan berhasil dibatalkan.');
+    }
+
+    /** API: sesi yang sudah penuh di tanggal tertentu */
+    public function bookedSesi(Request $request)
+    {
+        $tanggal  = $request->query('tanggal');
+        $tempatId = $request->query('tempat_id');
+        if (!$tanggal) return response()->json([]);
+
+        $query = Kunjungan::where('tanggal_kunjungan', $tanggal)->where('status', 'approved');
+        if ($tempatId) $query->where('tempat_id', $tempatId);
+
+        $booked = $query->pluck('sesi_id')->unique()->values();
+        return response()->json($booked);
+    }
+
+    /** Evaluasi Form */
+    public function evaluasiForm($id)
+    {
+        $kunjungan = Kunjungan::with(['sekolah', 'kontak'])->where('nomor_registrasi', $id)->firstOrFail();
+        if ($kunjungan->status !== 'completed') abort(403, 'Hanya untuk kunjungan selesai.');
+        if ($kunjungan->updated_at->diffInDays(now()) > 7) abort(403, 'Batas evaluasi sudah lewat.');
+        return view('public.evaluasi', compact('kunjungan'));
+    }
+
+    /** Simpan Evaluasi */
+    public function simpanEvaluasi(Request $request, $id)
+    {
+        $kunjungan = Kunjungan::where('nomor_registrasi', $id)->firstOrFail();
+        if ($kunjungan->status !== 'completed') abort(403);
+        if ($kunjungan->updated_at->diffInDays(now()) > 7) abort(403);
+
+        $request->validate([
+            'rating_pelayanan' => 'required|integer|min:1|max:5',
+            'rating_fasilitas' => 'required|integer|min:1|max:5',
+            'rating_informasi' => 'required|integer|min:1|max:5',
+            'komentar'         => 'nullable|string|max:1000',
+            'saran'            => 'nullable|string|max:1000',
+        ]);
+
+        $kunjungan->update(['catatan_admin' => json_encode([
+            'rating_pelayanan' => $request->rating_pelayanan,
+            'rating_fasilitas' => $request->rating_fasilitas,
+            'rating_informasi' => $request->rating_informasi,
+            'komentar'         => $request->komentar,
+            'saran'            => $request->saran,
+            'disimpan_pada'    => now()->toISOString(),
+        ])]);
+
+        return redirect()->route('evaluasi.terima-kasih', $kunjungan->nomor_registrasi);
+    }
+
+    /** Terima Kasih Evaluasi */
+    public function terimaKasih($id)
+    {
+        $kunjungan = Kunjungan::where('nomor_registrasi', $id)->firstOrFail();
+        return view('public.terima-kasih', compact('kunjungan'));
+    }
+
+    /** Daftar Hari Libur Nasional */
     private function nationalHolidays(int $year): array
     {
         $h = [
@@ -264,12 +316,11 @@ class KunjunganController extends Controller
             "$year-12-25" => "Hari Raya Natal",
             "$year-12-26" => "Cuti Bersama Natal",
         ];
-
         if ($year === 2026) {
             $h += [
                 "2026-01-27" => "Isra Mi'raj Nabi Muhammad SAW",
                 "2026-01-29" => "Tahun Baru Imlek 2577",
-                "2026-03-20" => "Hari Raya Nyepi (Tahun Baru Saka 1948)",
+                "2026-03-20" => "Hari Raya Nyepi",
                 "2026-03-31" => "Hari Raya Idul Fitri 1447H",
                 "2026-04-01" => "Hari Raya Idul Fitri 1447H",
                 "2026-04-02" => "Wafat Isa Al Masih",
@@ -282,7 +333,6 @@ class KunjunganController extends Controller
                 "2026-09-05" => "Maulid Nabi Muhammad SAW",
             ];
         }
-
         if ($year === 2027) {
             $h += [
                 "2027-01-17" => "Isra Mi'raj Nabi Muhammad SAW",
@@ -296,7 +346,6 @@ class KunjunganController extends Controller
                 "2027-09-25" => "Maulid Nabi Muhammad SAW",
             ];
         }
-
         return $h;
     }
 }

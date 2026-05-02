@@ -120,13 +120,13 @@
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-3 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $item->nomor_registrasi }}</td>
                         <td class="px-3 py-3">
-                            <div class="font-medium text-gray-800 text-xs">{{ $item->nama_sekolah }}</div>
+                            <div class="font-medium text-gray-800 text-xs">{{ $item->sekolah->nama }}</div>
                             <div class="text-xs text-gray-400">{{ number_format($item->jumlah_peserta) }} orang</div>
                         </td>
                         <td class="px-3 py-3 text-xs text-gray-600 whitespace-nowrap">
                             {{ $item->tanggal_format }}
-                            @if($item->jam_mulai)
-                                <div class="text-gray-400">{{ $item->jam_mulai }}–{{ $item->jam_selesai }}</div>
+                            @if($item->sesi)
+                                <div class="text-gray-400">{{ $item->sesi->nama }}</div>
                             @endif
                         </td>
                         <td class="px-3 py-3">
@@ -174,8 +174,8 @@
                         {{ $i + 1 }}
                     </span>
                     <div class="flex-1 min-w-0">
-                        <p class="font-semibold text-xs text-gray-800 truncate">{{ $sekolah->nama_sekolah }}</p>
-                        <p class="text-xs text-gray-400">{{ $sekolah->total_kunjungan }}× · {{ number_format($sekolah->total_peserta) }} peserta total</p>
+                        <p class="font-semibold text-xs text-gray-800 truncate">{{ $sekolah->nama }}</p>
+                        <p class="text-xs text-gray-400">{{ $sekolah->total_kunjungan }}× · {{ number_format($sekolah->total_peserta ?? 0) }} peserta total</p>
                     </div>
                     <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0">
                         {{ $sekolah->total_kunjungan }}×
@@ -201,9 +201,9 @@
                 <div class="px-4 py-3 hover:bg-gray-50 transition-colors">
                     <div class="flex items-start justify-between gap-2">
                         <div class="min-w-0">
-                            <p class="font-semibold text-xs text-gray-800 truncate">{{ $visit->nama_sekolah }}</p>
+                            <p class="font-semibold text-xs text-gray-800 truncate">{{ $visit->sekolah->nama }}</p>
                             <p class="text-xs text-gray-400 mt-0.5">{{ $visit->tanggal_format }}
-                                @if($visit->jam_mulai) · {{ $visit->jam_mulai }} WIB @endif
+                                @if($visit->sesi) · {{ $visit->sesi->nama }} @endif
                             </p>
                         </div>
                         <a href="{{ route('admin.kunjungan.show', $visit) }}"

@@ -66,10 +66,20 @@
                     <label for="telepon" class="block text-sm font-medium text-gray-700 mb-1">
                         Nomor Telepon Sekolah <span class="text-red-500">*</span>
                     </label>
-                    <input type="tel" id="telepon" name="telepon"
-                        class="w-full border @error('telepon') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40"
-                        value="{{ old('telepon') }}" placeholder="Contoh: 022-1234567" required>
-                    @error('telepon') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <input type="tel" id="telepon" name="telepon_sekolah"
+                        class="w-full border @error('telepon_sekolah') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40"
+                        value="{{ old('telepon_sekolah') }}" placeholder="Contoh: 022-1234567" required>
+                    @error('telepon_sekolah') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+                        Email Sekolah <span class="text-red-500">*</span>
+                    </label>
+                    <input type="email" id="email" name="email_sekolah"
+                        class="w-full border @error('email_sekolah') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40"
+                        value="{{ old('email_sekolah') }}" placeholder="email@sekolah.sch.id" required>
+                    @error('email_sekolah') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="sm:col-span-2">
@@ -102,14 +112,38 @@
                 </div>
 
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+                    <label for="jenis_pic" class="block text-sm font-medium text-gray-700 mb-1">
+                        Jabatan Penanggungjawab <span class="text-red-500">*</span>
+                    </label>
+                    <select id="jenis_pic" name="jabatan_pic"
+                        class="w-full border @error('jabatan_pic') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40 bg-white" required>
+                        <option value="">-- Pilih jabatan --</option>
+                        <option value="kepsek" {{ old('jabatan_pic') == 'kepsek' ? 'selected' : '' }}>Kepala Sekolah</option>
+                        <option value="guru"   {{ old('jabatan_pic') == 'guru'   ? 'selected' : '' }}>Guru</option>
+                        <option value="tendik" {{ old('jabatan_pic') == 'tendik' ? 'selected' : '' }}>Tenaga Kependidikan</option>
+                    </select>
+                    @error('jabatan_pic') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label for="email_pic" class="block text-sm font-medium text-gray-700 mb-1">
                         Email Penanggungjawab <span class="text-red-500">*</span>
                     </label>
-                    <input type="email" id="email" name="email"
-                        class="w-full border @error('email') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40"
-                        value="{{ old('email') }}" placeholder="email@sekolah.sch.id" required>
+                    <input type="email" id="email_pic" name="email_pic"
+                        class="w-full border @error('email_pic') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40"
+                        value="{{ old('email_pic') }}" placeholder="email@pic.sch.id" required>
                     <p class="text-gray-400 text-xs mt-1">✉️ Notifikasi status akan dikirim ke email ini.</p>
-                    @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    @error('email_pic') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label for="telepon_pic" class="block text-sm font-medium text-gray-700 mb-1">
+                        Nomor Telepon Penanggungjawab <span class="text-red-500">*</span>
+                    </label>
+                    <input type="tel" id="telepon_pic" name="telepon_pic"
+                        class="w-full border @error('telepon_pic') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40"
+                        value="{{ old('telepon_pic') }}" placeholder="Contoh: 081234567890" required>
+                    @error('telepon_pic') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
         </div>
@@ -145,38 +179,58 @@
                             value="{{ old('tanggal_kunjungan') }}"
                             min="{{ now()->addDays(7)->toDateString() }}" 
                             onchange="fetchBookedHours()" required>
-                        <p class="text-gray-400 text-xs mt-1">📅 Minimal 7 hari dari hari ini. Senin–Jumat.
+                        <p class="text-gray-400 text-xs mt-1">📅 Minimal 7 hari dari hari ini. Hanya <strong>Senin–Kamis</strong>.
                             <a href="{{ route('kalender') }}" class="text-upi-red hover:underline ml-1">Pilih dari kalender →</a>
                         </p>
                     @endif
                     @error('tanggal_kunjungan') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                {{-- Jam Mulai & Selesai --}}
-                <div>
-                    <label for="jam_mulai" class="block text-sm font-medium text-gray-700 mb-1">
-                        Jam Mulai <span class="text-red-500">*</span>
+                {{-- Sesi Kunjungan --}}
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Sesi Kunjungan <span class="text-red-500">*</span>
                     </label>
-                    <select id="jam_mulai" name="jam_mulai" onchange="updateJamSelesai()"
-                        class="w-full border @error('jam_mulai') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40 bg-white" required>
-                        <option value="">-- Pilih jam mulai --</option>
-                        @foreach(['08:00','09:00','10:00','11:00','12:00','13:00','14:00'] as $jam)
-                            <option value="{{ $jam }}" {{ old('jam_mulai') == $jam ? 'selected' : '' }}>{{ $jam }} WIB</option>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        @foreach($sesi as $s)
+                        <label class="cursor-pointer">
+                            <input type="radio" name="sesi_id" value="{{ $s->id }}" class="peer sr-only"
+                                {{ old('sesi_id') == $s->id ? 'checked' : '' }} required>
+                            <div class="border-2 border-gray-200 peer-checked:border-upi-red peer-checked:bg-red-50 rounded-xl p-4 hover:border-upi-red/50 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">{{ $loop->first ? '🌅' : '☀️' }}</span>
+                                    <div>
+                                        <p class="font-bold text-gray-800 text-sm">{{ $s->nama }}</p>
+                                        <p class="text-upi-red font-semibold text-sm">{{ substr($s->jam_mulai,0,5) }} – {{ substr($s->jam_selesai,0,5) }} WIB</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
                         @endforeach
-                    </select>
-                    @error('jam_mulai') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <p class="text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs mt-2 flex items-center gap-1.5">
+                        ⚠️ <span>Harap datang <strong>selambatnya 30 menit sebelum sesi dimulai</strong> untuk proses registrasi.</span>
+                    </p>
+                    @error('sesi_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                <div>
-                    <label for="jam_selesai" class="block text-sm font-medium text-gray-700 mb-1">
-                        Jam Selesai <span class="text-red-500">*</span>
+                {{-- Tempat Kunjungan --}}
+                <div class="sm:col-span-2">
+                    <label for="tempat" class="block text-sm font-medium text-gray-700 mb-1">
+                        Tempat Kunjungan <span class="text-red-500">*</span>
                     </label>
-                    <select id="jam_selesai" name="jam_selesai"
-                        class="w-full border @error('jam_selesai') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40 bg-white" required>
-                        <option value="">-- Pilih jam mulai dulu --</option>
+                    <select id="tempat" name="tempat_id" onchange="updateKapasitas()"
+                        class="w-full border @error('tempat_id') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40 bg-white" required>
+                        <option value="">-- Pilih tempat kunjungan --</option>
+                        @foreach($tempat as $t)
+                        <option value="{{ $t->id }}" data-cap="{{ $t->kapasitas }}"
+                            {{ old('tempat_id') == $t->id ? 'selected' : '' }}>
+                            {{ $t->nama }} (maks. {{ number_format($t->kapasitas) }} orang)
+                        </option>
+                        @endforeach
                     </select>
-                    <p class="text-gray-400 text-xs mt-1">⏱ Durasi minimal 2 jam, maksimal 5 jam. Selesai paling lambat 16:00.</p>
-                    @error('jam_selesai') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <p id="kapasitas-info" class="text-gray-400 text-xs mt-1 hidden">📍 Kapasitas maksimal: <strong id="kapasitas-val"></strong> orang.</p>
+                    @error('tempat_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 {{-- Jumlah Peserta --}}
@@ -188,8 +242,44 @@
                         class="w-full border @error('jumlah_peserta') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40"
                         value="{{ old('jumlah_peserta') }}" min="1" max="500"
                         placeholder="Contoh: 50" required>
-                    <p class="text-gray-400 text-xs mt-1">👥 Termasuk guru pendamping. Maks. 500 orang.</p>
+                    <p class="text-gray-400 text-xs mt-1">👥 Termasuk guru pendamping. Kapasitas sesuai tempat yang dipilih.</p>
                     @error('jumlah_peserta') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Jumlah Kepsek --}}
+                <div>
+                    <label for="jumlah_kepsek" class="block text-sm font-medium text-gray-700 mb-1">
+                        Jumlah Kepala Sekolah
+                    </label>
+                    <input type="number" id="jumlah_kepsek" name="jumlah_kepsek"
+                        class="w-full border @error('jumlah_kepsek') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40"
+                        value="{{ old('jumlah_kepsek', 0) }}" min="0" max="10"
+                        placeholder="0">
+                    @error('jumlah_kepsek') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Jumlah Guru --}}
+                <div>
+                    <label for="jumlah_guru" class="block text-sm font-medium text-gray-700 mb-1">
+                        Jumlah Guru
+                    </label>
+                    <input type="number" id="jumlah_guru" name="jumlah_guru"
+                        class="w-full border @error('jumlah_guru') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40"
+                        value="{{ old('jumlah_guru', 0) }}" min="0" max="100"
+                        placeholder="0">
+                    @error('jumlah_guru') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Jumlah Tendik --}}
+                <div>
+                    <label for="jumlah_tendik" class="block text-sm font-medium text-gray-700 mb-1">
+                        Jumlah Tenaga Kependidikan
+                    </label>
+                    <input type="number" id="jumlah_tendik" name="jumlah_tendik"
+                        class="w-full border @error('jumlah_tendik') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40"
+                        value="{{ old('jumlah_tendik', 0) }}" min="0" max="50"
+                        placeholder="0">
+                    @error('jumlah_tendik') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
         </div>
@@ -204,6 +294,29 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">
                 Upload Surat Permohonan Resmi <span class="text-red-500">*</span>
             </label>
+
+            {{-- Contoh surat --}}
+            <div class="mb-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <p class="text-xs font-semibold text-blue-700 mb-2">📄 Contoh / Template Surat Permohonan:</p>
+                <a href="https://docs.google.com/document/d/12a4thOHk9uW5mdbqfMicy_CIElKfAdZ-DWYJFd8PYoE/edit?usp=sharing" target="_blank" rel="noopener"
+                   class="flex items-center gap-3 hover:opacity-80 transition-opacity group">
+                    <div class="flex-shrink-0 w-16 h-20 bg-white border-2 border-blue-200 rounded-lg shadow-sm overflow-hidden flex flex-col">
+                        <div class="bg-blue-600 h-3 w-full"></div>
+                        <div class="p-1.5 flex-1 space-y-1">
+                            <div class="h-1.5 bg-gray-300 rounded w-full"></div>
+                            <div class="h-1.5 bg-gray-300 rounded w-3/4"></div>
+                            <div class="h-1.5 bg-gray-200 rounded w-full mt-2"></div>
+                            <div class="h-1.5 bg-gray-200 rounded w-full"></div>
+                            <div class="h-1.5 bg-gray-200 rounded w-5/6"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-blue-700 group-hover:underline">Lihat Template Surat Permohonan</p>
+                        <p class="text-xs text-blue-500 mt-0.5">Klik untuk membuka di Google Docs →</p>
+                        <p class="text-xs text-gray-400 mt-1">Surat harus berkop sekolah & ditandatangani Kepala Sekolah</p>
+                    </div>
+                </a>
+            </div>
 
             <div id="drop-zone"
                 class="relative border-2 border-dashed @error('file_surat') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl p-8 text-center cursor-pointer hover:border-upi-red hover:bg-red-50/40 transition-colors"
@@ -253,93 +366,23 @@
 
 @push('scripts')
 <script>
-let blockedHours = [];
-
-async function fetchBookedHours() {
-    const tglInput = document.getElementById('tanggal_kunjungan') || document.querySelector('input[name="tanggal_kunjungan"]');
-    if (!tglInput || !tglInput.value) return;
-
-    try {
-        const response = await fetch(`/api/booked-hours?tanggal=${tglInput.value}`);
-        blockedHours = await response.json();
-    } catch (e) {
-        console.error('Gagal mengambil data jadwal terbooking:', e);
-        blockedHours = [];
-    }
-    
-    renderJamMulai();
-}
-
-function renderJamMulai() {
-    const mulaiEl = document.getElementById('jam_mulai');
-    const oldVal  = '{{ old("jam_mulai") }}';
-    
-    // Simpan pilihan saat ini (jika ada) sebelum kita buat ulang
-    const currentVal = mulaiEl.value || oldVal;
-
-    mulaiEl.innerHTML = '<option value="">-- Pilih jam mulai --</option>';
-    
-    const availableHours = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00'];
-    
-    availableHours.forEach(jam => {
-        const opt = document.createElement('option');
-        opt.value = jam;
-        
-        if (blockedHours.includes(jam)) {
-            opt.disabled = true;
-            opt.textContent = `${jam} WIB (Penuh)`;
-            opt.className = 'text-gray-400 bg-gray-100';
-        } else {
-            opt.textContent = `${jam} WIB`;
-        }
-
-        if (jam === currentVal && !opt.disabled) opt.selected = true;
-        mulaiEl.appendChild(opt);
-    });
-
-    updateJamSelesai();
-}
-
-// ── Time picker logic ──────────────────────────────────
-function updateJamSelesai() {
-    const mulaiEl   = document.getElementById('jam_mulai');
-    const selesaiEl = document.getElementById('jam_selesai');
-    const oldVal    = '{{ old("jam_selesai") }}';
-    const startH    = parseInt(mulaiEl.value);
-
-    selesaiEl.innerHTML = '<option value="">-- Pilih jam selesai --</option>';
-
-    if (isNaN(startH)) return;
-
-    // Min 2 jam, Max 5 jam, tapi selesai paling lambat 16:00
-    for (let h = startH + 2; h <= Math.min(startH + 5, 16); h++) {
-        const val  = `${String(h).padStart(2,'0')}:00`;
-        const dur  = h - startH;
-        
-        // Periksa jika ada jam terbooking antara startH dan h
-        let isOverlapping = false;
-        for (let check = startH; check < h; check++) {
-            const checkStr = `${String(check).padStart(2,'0')}:00`;
-            if (blockedHours.includes(checkStr)) {
-                isOverlapping = true;
-                break;
-            }
-        }
-
-        if (!isOverlapping) {
-            const opt  = document.createElement('option');
-            opt.value  = val;
-            opt.textContent = `${val} WIB  (${dur} jam)`;
-            if (val === oldVal) opt.selected = true;
-            selesaiEl.appendChild(opt);
-        }
+// Kapasitas dari tempat
+function updateKapasitas() {
+    const sel = document.getElementById('tempat');
+    const opt = sel.options[sel.selectedIndex];
+    const cap = opt ? opt.getAttribute('data-cap') : null;
+    const info = document.getElementById('kapasitas-info');
+    const capVal = document.getElementById('kapasitas-val');
+    const pesertaInput = document.getElementById('jumlah_peserta');
+    if (cap) {
+        capVal.textContent = parseInt(cap).toLocaleString('id-ID');
+        info.classList.remove('hidden');
+        pesertaInput.max = cap;
+    } else {
+        info.classList.add('hidden');
+        pesertaInput.max = 500;
     }
 }
-
-// Restore old value on page load (after validation error)
-window.addEventListener('DOMContentLoaded', () => {
-    fetchBookedHours();
-});
 
 // ── File drop/select ───────────────────────────────────
 function showFileName(input) {
@@ -370,6 +413,8 @@ function handleSubmit(form) {
     btn.textContent = 'Mengirim...';
     return true;
 }
+
+window.addEventListener('DOMContentLoaded', () => { updateKapasitas(); });
 </script>
 @endpush
 @endsection

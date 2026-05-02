@@ -116,6 +116,58 @@
             </svg>
             Dibatalkan
         </a>
+
+        {{-- ── Presensi ─────────────────────────────── --}}
+        <p class="text-gray-500 text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-1">Presensi</p>
+
+        <a href="{{ route('admin.scanner') }}"
+           class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-colors
+                  {{ request()->routeIs('admin.scanner') ? 'bg-upi-red text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}"
+           onclick="closeSidebar()">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+            </svg>
+            Scanner QR
+        </a>
+
+        <a href="{{ route('admin.presensi.index') }}"
+           class="flex items-center justify-between px-3 py-2.5 rounded-lg font-medium transition-colors
+                  {{ request()->routeIs('admin.presensi.index') ? 'bg-upi-red text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}"
+           onclick="closeSidebar()">
+            <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                Rekap Presensi
+            </div>
+            @php $activeNow = \App\Models\KunjunganPresensi::whereNotNull('waktu_masuk')->whereNull('waktu_keluar')->count(); @endphp
+            @if($activeNow > 0)
+            <span class="bg-green-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold min-w-[20px] text-center">
+                {{ $activeNow }}
+            </span>
+            @endif
+        </a>
+
+        {{-- ── Survei ───────────────────────────────── --}}
+        <p class="text-gray-500 text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-1">Survei & Ulasan</p>
+
+        <a href="{{ route('admin.survei.index') }}"
+           class="flex items-center justify-between px-3 py-2.5 rounded-lg font-medium transition-colors
+                  {{ request()->routeIs('admin.survei.index') ? 'bg-upi-red text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}"
+           onclick="closeSidebar()">
+            <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                </svg>
+                Survei Kepuasan
+            </div>
+            @php $newSurvei = \App\Models\SurveiKepuasan::whereDate('created_at', today())->count(); @endphp
+            @if($newSurvei > 0)
+            <span class="bg-yellow-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold min-w-[20px] text-center">
+                {{ $newSurvei }}
+            </span>
+            @endif
+        </a>
     </nav>
 
     <div class="p-3 border-t border-gray-700 bg-gray-800 flex-shrink-0">
