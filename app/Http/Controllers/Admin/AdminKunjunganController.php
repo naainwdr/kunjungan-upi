@@ -111,6 +111,16 @@ class AdminKunjunganController extends Controller
 
         $kunjungan->logStatus('completed', null, auth()->id());
         $kunjungan->update(['status' => 'completed']);
+        
+        // Auto check-out jika belum
+        $presensi = $kunjungan->presensi;
+        if ($presensi && !$presensi->waktu_keluar && $presensi->waktu_masuk) {
+            $presensi->update([
+                'waktu_keluar' => now(),
+                'petugas_keluar_id' => auth()->id()
+            ]);
+        }
+
         $this->kirimEmailEvaluasi($kunjungan);
 
         return redirect()->route('admin.dashboard')

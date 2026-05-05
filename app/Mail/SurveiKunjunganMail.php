@@ -20,6 +20,6 @@ class SurveiKunjunganMail extends Mailable
     {
         return $this
             ->subject('Form Survei Kepuasan Kunjungan UPI — ' . $this->kunjungan->nomor_registrasi)
-            ->view('emails.survei-kunjungan');
+            ->markdown('emails.survei-kunjungan');
     }
 }

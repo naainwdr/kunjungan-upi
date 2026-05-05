@@ -179,15 +179,15 @@ $nextYear    = $month == 12 ? $year + 1 : $year;
             Semua kunjungan bulan ini sudah berlalu.
         </div>
     @else
-    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-        <table class="w-full text-sm">
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-x-auto">
+        <table class="w-full text-sm min-w-[600px]">
             <thead class="bg-gray-50 border-b border-gray-200">
                 <tr>
                     <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tanggal</th>
-                    <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Sesi / Jam</th>
+                    <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Sesi / Jam</th>
                     <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Sekolah</th>
-                    <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Tempat</th>
-                    <th class="text-right px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Peserta</th>
+                    <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tempat</th>
+                    <th class="text-right px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Peserta</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -206,10 +206,10 @@ $nextYear    = $month == 12 ? $year + 1 : $year;
                     <td class="px-4 py-3">
                         <div class="{{ $dateCls }} text-sm font-semibold">{{ $v->tanggal_kunjungan->format('d M Y') }}</div>
                         <div class="text-xs text-gray-400">{{ $v->tanggal_kunjungan->isoFormat('dddd') }}</div>
-                        @if($isToday)   <span class="text-[10px] bg-yellow-200 text-yellow-800 px-1.5 py-0.5 rounded font-bold">HARI INI</span>  @endif
-                        @if($isTomorrow) <span class="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-semibold">BESOK</span> @endif
+                        @if($isToday)   <span class="text-[10px] bg-yellow-200 text-yellow-800 px-1.5 py-0.5 rounded font-bold mt-1 inline-block">HARI INI</span>  @endif
+                        @if($isTomorrow) <span class="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-semibold mt-1 inline-block">BESOK</span> @endif
                     </td>
-                    <td class="px-4 py-3 hidden sm:table-cell">
+                    <td class="px-4 py-3">
                         @if($v->sesi)
                             <span class="text-xs bg-upi-red/10 text-upi-red px-2 py-0.5 rounded-full font-semibold">{{ $v->sesi->nama }}</span>
                             <div class="text-xs text-gray-400 mt-0.5">{{ $v->sesi->label }}</div>
@@ -218,13 +218,13 @@ $nextYear    = $month == 12 ? $year + 1 : $year;
                         @endif
                     </td>
                     <td class="px-4 py-3">
-                        <div class="font-medium text-gray-800 text-sm">{{ $v->nama_sekolah }}</div>
-                        <div class="text-xs text-gray-400">{{ $v->npsn }}</div>
+                        <div class="font-medium text-gray-800 text-sm">{{ $v->sekolah->nama ?? '-' }}</div>
+                        <div class="text-xs text-gray-400">NPSN: {{ $v->sekolah->npsn ?? '-' }}</div>
                     </td>
-                    <td class="px-4 py-3 hidden md:table-cell">
-                        <div class="text-xs text-gray-600">{{ $v->tempat ?? '-' }}</div>
+                    <td class="px-4 py-3">
+                        <div class="text-xs text-gray-600">{{ $v->tempat->nama ?? '-' }}</div>
                     </td>
-                    <td class="px-4 py-3 text-right hidden sm:table-cell">
+                    <td class="px-4 py-3 text-right">
                         <span class="text-sm font-semibold text-gray-700">{{ number_format($v->jumlah_peserta) }}</span>
                         <div class="text-xs text-gray-400">orang</div>
                     </td>

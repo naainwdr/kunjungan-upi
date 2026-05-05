@@ -101,17 +101,23 @@ class PresensiController extends Controller
             'petugas_keluar_id' => auth()->id(),
         ]);
 
+        // Update kunjungan status to completed
+        if ($kunjungan->status !== 'completed') {
+            $kunjungan->logStatus('completed', 'Auto-completed upon check-out', auth()->id());
+            $kunjungan->update(['status' => 'completed']);
+        }
+
         // Kirim link survei ke kontak
-        $surveiUrl = route('survei.form', $kunjungan->nomor_registrasi);
+        $surveiUrl = route('evaluasi.form', ['id' => $kunjungan->nomor_registrasi]);
         try {
             \Mail::to($kunjungan->kontak->email)->send(
-                new \App\Mail\SurveiKunjunganMail($kunjungan, $surveiUrl)
+                new \App\Mail\EvaluasiKunjunganMail($kunjungan)
             );
         } catch (\Exception $e) {
             \Log::warning('Gagal kirim email survei: ' . $e->getMessage());
         }
 
-        $msg = "Check-out berhasil. Durasi kunjungan: {$presensi->fresh()->durasi}. Link survei dikirim ke {$kunjungan->kontak->email}.";
+        $msg = "Check-out berhasil. Durasi kunjungan: {$presensi->fresh()->durasi}. Kunjungan diselesaikan dan link survei dikirim ke {$kunjungan->kontak->email}.";
         return $this->successResponse($request, $msg, $kunjungan);
     }
 

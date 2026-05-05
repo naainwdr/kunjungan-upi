@@ -95,9 +95,17 @@
                     @endif
 
                     @if($item->status === 'approved')
-                    <div class="mt-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
-                        ✅ <strong>Selamat!</strong> Kunjungan Anda telah disetujui. Silakan datang sesuai jadwal.
-                        Hubungi kami: 📲 <a href="https://wa.me/6285133332559" target="_blank" class="font-semibold hover:underline">085133332559</a> atau ✉️ humas@upi.edu
+                    <div class="mt-4 bg-green-50 border border-green-200 rounded-lg p-4 flex flex-col sm:flex-row gap-4 items-center sm:items-start">
+                        <div class="flex-shrink-0 bg-white p-2 rounded-xl shadow-sm border border-green-100" id="qr-container-{{ $item->nomor_registrasi }}">
+                            {{-- QR Code will be injected here via JS --}}
+                        </div>
+                        <div class="text-sm text-green-800 text-center sm:text-left">
+                            <p class="mb-2">✅ <strong>Selamat!</strong> Kunjungan Anda telah disetujui. Silakan tunjukkan QR Code ini atau e-Ticket saat kedatangan untuk registrasi (scan check-in).</p>
+                            <p class="mb-3">Hubungi kami: 📲 <a href="https://wa.me/6285133332559" target="_blank" class="font-semibold hover:underline">085133332559</a> atau ✉️ humas@upi.edu</p>
+                            <a href="{{ route('reservasi.tiket', ['id' => $item->nomor_registrasi]) }}" target="_blank" class="inline-flex items-center gap-2 bg-green-700 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-green-800 transition-colors">
+                                🎟️ Buka &amp; Unduh e-Ticket
+                            </a>
+                        </div>
                     </div>
                     @elseif($item->status === 'rejected')
                     <div class="mt-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-800">
@@ -172,3 +180,25 @@
     @endisset
 </div>
 @endsection
+
+@push('scripts')
+@if(isset($kunjungan) && $kunjungan->isNotEmpty() && $kunjungan->contains('status', 'approved'))
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        @foreach($kunjungan as $item)
+            @if($item->status === 'approved')
+            new QRCode(document.getElementById("qr-container-{{ $item->nomor_registrasi }}"), {
+                text: "{{ $item->nomor_registrasi }}",
+                width: 90,
+                height: 90,
+                colorDark: "#166534", // text-green-800
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+            @endif
+        @endforeach
+    });
+</script>
+@endif
+@endpush

@@ -9,7 +9,8 @@
         </div>
         <h1 class="text-2xl font-bold text-gray-800 mb-2">Terima Kasih!</h1>
         <p class="text-gray-500 text-sm mb-6">
-            Survei kepuasan dari <strong>{{ $kunjungan->sekolah->nama }}</strong><br>
+            Survei kepuasan dari <strong>{{ $kunjungan->sekolah->nama ?? 'Instansi/Sekolah' }}</strong><br>
+            (PIC: {{ $kunjungan->kontak->nama ?? 'PIC' }})<br>
             telah berhasil dikirimkan. Masukan Anda sangat berarti bagi kami.
         </p>
         @if($kunjungan->survei)

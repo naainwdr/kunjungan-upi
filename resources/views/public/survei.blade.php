@@ -32,7 +32,8 @@
         </div>
         <h1 class="text-2xl font-bold text-gray-900">Survei Kepuasan Kunjungan</h1>
         <p class="text-gray-500 text-sm mt-1">
-            <strong>{{ $kunjungan->sekolah->nama }}</strong> · {{ $kunjungan->tanggal_format }}
+            <strong>{{ $kunjungan->sekolah->nama ?? 'Instansi/Sekolah' }}</strong><br>
+            PIC: {{ $kunjungan->kontak->nama ?? 'PIC' }} &middot; Kunjungan: {{ $kunjungan->tanggal_format }}
         </p>
     </div>
 

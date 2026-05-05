@@ -184,15 +184,7 @@ class KunjunganController extends Controller
     /** Upload file surat */
     private function uploadSurat(Request $request): string
     {
-        $disk = config('filesystems.default');
-        if ($disk === 'cloudinary') {
-            $result = Cloudinary::uploadApi()->upload($request->file('file_surat')->getRealPath(), [
-                'folder'        => 'upi-reservasi/surat',
-                'resource_type' => 'auto',
-                'public_id'     => 'surat_' . time(),
-            ]);
-            return $result['secure_url'];
-        }
+        // Menyimpan file secara lokal ke storage/app/public/surat
         return $request->file('file_surat')->store('surat', 'public');
     }
 

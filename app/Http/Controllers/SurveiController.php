@@ -72,7 +72,7 @@ class SurveiController extends Controller
     /** Terima kasih setelah survei */
     public function terimaKasih($nomorRegistrasi)
     {
-        $kunjungan = Kunjungan::with(['sekolah', 'survei'])->where('nomor_registrasi', $nomorRegistrasi)->firstOrFail();
+        $kunjungan = Kunjungan::with(['sekolah', 'kontak', 'survei'])->where('nomor_registrasi', $nomorRegistrasi)->firstOrFail();
         return view('public.survei-terima-kasih', compact('kunjungan'));
     }
 }

@@ -67,6 +67,7 @@
         #mobile-nav.open { max-height: 300px; opacity: 1; }
     </style>
     @stack('head')
+    @stack('styles')
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
 
@@ -128,9 +129,21 @@
                        class="text-gray-600 text-sm px-3 py-1.5 rounded-lg hover:bg-upi-red hover:text-white transition-colors {{ request()->routeIs('home') ? 'bg-upi-red text-white font-semibold' : '' }}">
                         Beranda
                     </a>
-                    <a href="{{ route('kalender') }}"
-                       class="text-gray-600 text-sm px-3 py-1.5 rounded-lg hover:bg-upi-red hover:text-white transition-colors {{ request()->routeIs('kalender') || request()->routeIs('reservasi.*') ? 'bg-upi-red text-white font-semibold' : '' }}">
-                        Permohonan
+                    <a href="{{ route('home') }}#prosedur"
+                       class="text-gray-600 text-sm px-3 py-1.5 rounded-lg hover:bg-upi-red hover:text-white transition-colors">
+                        Prosedur
+                    </a>
+                    <a href="{{ route('home') }}#informasi"
+                       class="text-gray-600 text-sm px-3 py-1.5 rounded-lg hover:bg-upi-red hover:text-white transition-colors">
+                        Informasi
+                    </a>
+                    <a href="{{ route('home') }}#galeri"
+                       class="text-gray-600 text-sm px-3 py-1.5 rounded-lg hover:bg-upi-red hover:text-white transition-colors">
+                        Momen
+                    </a>
+                    <a href="{{ route('home') }}#denah"
+                       class="text-gray-600 text-sm px-3 py-1.5 rounded-lg hover:bg-upi-red hover:text-white transition-colors">
+                        Denah
                     </a>
                     <a href="{{ route('cek-status') }}"
                        class="text-gray-600 text-sm px-3 py-1.5 rounded-lg hover:bg-upi-red hover:text-white transition-colors {{ request()->routeIs('cek-status*') ? 'bg-upi-red text-white font-semibold' : '' }}">
@@ -159,9 +172,21 @@
                    class="text-gray-700 text-sm py-2.5 px-3 rounded-lg hover:bg-upi-red hover:text-white transition-colors {{ request()->routeIs('home') ? 'bg-upi-red text-white font-semibold' : '' }}">
                     🏠 Beranda
                 </a>
-                <a href="{{ route('kalender') }}"
-                   class="text-gray-700 text-sm py-2.5 px-3 rounded-lg hover:bg-upi-red hover:text-white transition-colors {{ request()->routeIs('kalender') || request()->routeIs('reservasi.*') ? 'bg-upi-red text-white font-semibold' : '' }}">
-                    📅 Permohonan Kunjungan
+                <a href="{{ route('home') }}#prosedur"
+                   class="text-gray-700 text-sm py-2.5 px-3 rounded-lg hover:bg-upi-red hover:text-white transition-colors">
+                    📝 Prosedur
+                </a>
+                <a href="{{ route('home') }}#informasi"
+                   class="text-gray-700 text-sm py-2.5 px-3 rounded-lg hover:bg-upi-red hover:text-white transition-colors">
+                    ℹ️ Informasi
+                </a>
+                <a href="{{ route('home') }}#galeri"
+                   class="text-gray-700 text-sm py-2.5 px-3 rounded-lg hover:bg-upi-red hover:text-white transition-colors">
+                    📸 Momen
+                </a>
+                <a href="{{ route('home') }}#denah"
+                   class="text-gray-700 text-sm py-2.5 px-3 rounded-lg hover:bg-upi-red hover:text-white transition-colors">
+                    🗺️ Denah
                 </a>
                 <a href="{{ route('cek-status') }}"
                    class="text-gray-700 text-sm py-2.5 px-3 rounded-lg hover:bg-upi-red hover:text-white transition-colors {{ request()->routeIs('cek-status*') ? 'bg-upi-red text-white font-semibold' : '' }}">

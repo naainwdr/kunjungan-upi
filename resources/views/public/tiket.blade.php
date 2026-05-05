@@ -5,7 +5,11 @@
 <style>
 @media print {
     nav, footer, .no-print { display: none !important; }
-    body { background: white !important; }
+    body { 
+        background: white !important; 
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
     .ticket-card { box-shadow: none !important; border: 2px solid #333 !important; }
 }
 .star-gold { color: #f59e0b; }
@@ -29,10 +33,7 @@
         {{-- Header --}}
         <div class="bg-[#800000] px-6 py-5 text-white text-center">
             <div class="flex items-center justify-center gap-3 mb-1">
-                @php $logoPath = public_path('images/logo-kkipp.png'); @endphp
-                @if(file_exists($logoPath))
-                <img src="{{ asset('images/logo-kkipp.png') }}" alt="KKIPP UPI" class="h-10 object-contain brightness-0 invert">
-                @endif
+                <img src="{{ asset('images/UPI-Logo-white.png') }}" alt="UPI Logo" class="h-12 object-contain">
                 <div class="text-left">
                     <p class="font-bold text-sm leading-tight">UNIVERSITAS PENDIDIKAN INDONESIA</p>
                     <p class="text-xs text-red-200">Sistem Kunjungan Sekolah</p>

@@ -36,8 +36,8 @@
 
 {{-- Sidebar --}}
 <aside id="sidebar"
-       class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col border-r-2 border-upi-red
-              -translate-x-full lg:translate-x-0 min-h-screen">
+       class="fixed lg:sticky lg:top-0 h-screen inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col border-r-2 border-upi-red
+              -translate-x-full lg:translate-x-0">
 
     <div class="p-4 border-b border-gray-700 bg-upi-red flex-shrink-0">
         <div class="flex items-center gap-2.5">

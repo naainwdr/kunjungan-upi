@@ -68,35 +68,50 @@
 
             {{-- Detail Kunjungan --}}
             <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-                <h2 class="font-bold text-gray-800 mb-4">📅 Detail Kunjungan</h2>
-                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <dt class="text-gray-400 text-xs mb-0.5">Nomor Registrasi</dt>
-                        <dd class="font-mono font-bold text-upi-blue">{{ $kunjungan->nomor_registrasi }}</dd>
+                <div class="flex flex-col sm:flex-row gap-5 items-start">
+                    {{-- QR Code --}}
+                    <div class="flex-shrink-0 flex flex-col items-center">
+                        <div id="qr-container" class="border border-gray-200 rounded-xl p-2 bg-white shadow-sm"></div>
+                        <p class="text-[9px] text-gray-400 mt-1 font-mono text-center">QR Registrasi</p>
                     </div>
-                    <div>
-                        <dt class="text-gray-400 text-xs mb-0.5">Tanggal Diajukan</dt>
-                        <dd class="text-gray-700">{{ $kunjungan->created_at->isoFormat('dddd, D MMMM Y') }}</dd>
+                    
+                    {{-- Detail text --}}
+                    <div class="flex-1 w-full">
+                        <h2 class="font-bold text-gray-800 mb-4">📅 Detail Kunjungan</h2>
+                        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <dt class="text-gray-400 text-xs mb-0.5">Nomor Registrasi</dt>
+                                <dd class="font-mono font-bold text-upi-blue">{{ $kunjungan->nomor_registrasi }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-gray-400 text-xs mb-0.5">Tanggal Diajukan</dt>
+                                <dd class="text-gray-700">{{ $kunjungan->created_at->isoFormat('dddd, D MMMM Y') }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-gray-400 text-xs mb-0.5">Tanggal Kunjungan</dt>
+                                <dd class="font-semibold text-gray-800">{{ $kunjungan->tanggal_format }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-gray-400 text-xs mb-0.5">Sesi</dt>
+                                <dd class="font-semibold text-gray-800">{{ $kunjungan->sesi->label ?? '-' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-gray-400 text-xs mb-0.5">Tempat</dt>
+                                <dd class="text-gray-700">{{ $kunjungan->tempat->nama ?? '-' }}
+                                    @if($kunjungan->tempat) <span class="text-xs text-gray-400">(Kap. {{ number_format($kunjungan->tempat->kapasitas) }})</span> @endif
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-gray-400 text-xs mb-0.5">Jumlah Peserta</dt>
+                                <dd class="font-semibold text-gray-800">Total: {{ number_format($kunjungan->jumlah_peserta) }} orang<br>
+                                    <span class="text-xs text-gray-500 font-normal">
+                                        Kepsek: {{ $kunjungan->jumlah_kepsek }}, Guru: {{ $kunjungan->jumlah_guru }}, Tendik: {{ $kunjungan->jumlah_tendik }}
+                                    </span>
+                                </dd>
+                            </div>
+                        </dl>
                     </div>
-                    <div>
-                        <dt class="text-gray-400 text-xs mb-0.5">Tanggal Kunjungan</dt>
-                        <dd class="font-semibold text-gray-800">{{ $kunjungan->tanggal_format }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-gray-400 text-xs mb-0.5">Sesi</dt>
-                        <dd class="font-semibold text-gray-800">{{ $kunjungan->sesi->label ?? '-' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-gray-400 text-xs mb-0.5">Tempat</dt>
-                        <dd class="text-gray-700">{{ $kunjungan->tempat->nama ?? '-' }}
-                            @if($kunjungan->tempat) <span class="text-xs text-gray-400">(Kap. {{ number_format($kunjungan->tempat->kapasitas) }})</span> @endif
-                        </dd>
-                    </div>
-                    <div>
-                        <dt class="text-gray-400 text-xs mb-0.5">Jumlah Peserta</dt>
-                        <dd class="font-semibold text-gray-800">{{ number_format($kunjungan->jumlah_peserta) }} orang</dd>
-                    </div>
-                </dl>
+                </div>
             </div>
 
             {{-- Surat Permohonan --}}
@@ -225,19 +240,13 @@
                     </div>
                 </div>
                 @if(!$presensi || !$presensi->waktu_masuk)
-                <form method="POST" action="{{ route('admin.presensi.checkin', $kunjungan) }}">
-                    @csrf
-                    <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-green-700 transition-colors">
-                        ✅ Check-In Sekarang
-                    </button>
-                </form>
+                <a href="{{ route('admin.scanner') }}" class="block text-center w-full bg-green-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-green-700 transition-colors">
+                    ✅ Buka Scanner untuk Check-In
+                </a>
                 @elseif($presensi->waktu_masuk && !$presensi->waktu_keluar)
-                <form method="POST" action="{{ route('admin.presensi.checkout', $kunjungan) }}">
-                    @csrf
-                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition-colors">
-                        🚪 Check-Out Sekarang
-                    </button>
-                </form>
+                <a href="{{ route('admin.scanner') }}" class="block text-center w-full bg-blue-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition-colors">
+                    🚪 Buka Scanner untuk Check-Out
+                </a>
                 @else
                 <div class="text-center">
                     <span class="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full">🏁 Kunjungan Selesai · {{ $presensi->durasi }}</span>
@@ -256,11 +265,11 @@
                 🎫 Lihat Tiket QR
             </a>
 
-            {{-- Mark as Completed --}}
-            @if($kunjungan->tanggal_kunjungan->isPast() || $kunjungan->tanggal_kunjungan->isToday())
+            {{-- Mark as Completed / Presensi --}}
+            @if($kunjungan->status === 'approved')
             <div class="bg-blue-50 border border-blue-200 rounded-xl shadow-sm p-5">
-                <h2 class="font-bold text-blue-700 mb-3">🏁 Tandai Kunjungan Selesai</h2>
-                <p class="text-blue-600 text-xs mb-4">Kunjungan telah berlangsung. Tandai sebagai selesai untuk mengirim form evaluasi ke PIC.</p>
+                <h2 class="font-bold text-blue-700 mb-3">🏁 Tindakan Akhir Kunjungan</h2>
+                <p class="text-blue-600 text-xs mb-4">Pastikan rombongan sudah selesai. Tombol ini akan menandai kunjungan selesai, mencatat waktu check-out otomatis (jika belum), dan mengirimkan email link survei ke PIC.</p>
                 <form method="POST" action="{{ route('admin.kunjungan.complete', $kunjungan) }}" id="form-complete">
                     @csrf
 
@@ -270,7 +279,7 @@
                         <p class="text-blue-600 text-xs mb-3">Form evaluasi akan dikirim ke email PIC: {{ $kunjungan->kontak->email }}</p>
                         <div class="flex gap-2">
                             <button type="submit" class="flex-1 bg-blue-600 text-white py-1.5 rounded font-bold text-xs hover:bg-blue-700">
-                                ✓ Ya, Tandai Selesai
+                                ✓ Ya, Selesaikan
                             </button>
                             <button type="button" onclick="document.getElementById('confirm-complete').classList.add('hidden');"
                                 class="flex-1 border border-gray-300 text-gray-600 py-1.5 rounded text-xs hover:bg-gray-50">
@@ -282,7 +291,7 @@
                     <button type="button"
                         onclick="document.getElementById('confirm-complete').classList.remove('hidden'); this.classList.add('hidden');"
                         class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 transition-colors">
-                        🏁 Tandai Kunjungan Selesai
+                        🏁 Selesaikan &amp; Kirim Survei
                     </button>
                 </form>
             </div>
@@ -314,3 +323,19 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        new QRCode(document.getElementById("qr-container"), {
+            text: "{{ $kunjungan->nomor_registrasi }}",
+            width: 80,
+            height: 80,
+            colorDark: "#1f2937", // text-gray-800
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.M
+        });
+    });
+</script>
+@endpush

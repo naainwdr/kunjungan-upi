@@ -40,7 +40,7 @@ class EvaluasiKunjunganMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.evaluasi-kunjungan',
+            markdown: 'emails.evaluasi-kunjungan',
             with: [
                 'kunjungan' => $this->kunjungan,
             ],
