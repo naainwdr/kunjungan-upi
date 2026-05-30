@@ -84,7 +84,17 @@ $nextYear    = $month == 12 ? $year + 1 : $year;
                     $isPast     = $date->lt($today);
                     $isTooSoon  = !$isPast && $date->lt($minDate);
                     $isToday    = $date->isToday();
-                    $isBlocked  = $isWeekend || $isHoliday;
+                    
+                    // Admin Overrides
+                    $override = $overrides->get($dateStr);
+                    if ($override) {
+                        $isBlocked = $override->is_libur;
+                        $customLabel = $override->catatan;
+                    } else {
+                        $isBlocked  = $isWeekend || $isHoliday;
+                        $customLabel = $holName;
+                    }
+
                     $count      = $approvedVisits->get($dateStr, 0);
 
                     if ($isPast) {
@@ -93,7 +103,7 @@ $nextYear    = $month == 12 ? $year + 1 : $year;
                         $numCls = 'text-gray-300';
                     } elseif ($isBlocked) {
                         $bg     = 'bg-red-50 hover:bg-red-100 cursor-pointer transition-colors';
-                        $action = $isHoliday ? 'holiday' : 'weekend';
+                        $action = $override ? 'blocked' : ($isHoliday ? 'holiday' : 'weekend');
                         $numCls = 'text-red-500 font-semibold';
                     } elseif ($isTooSoon) {
                         $bg     = 'bg-amber-50 cursor-not-allowed';
@@ -104,11 +114,11 @@ $nextYear    = $month == 12 ? $year + 1 : $year;
                         $action = 'ok';
                         $numCls = $isToday ? 'text-upi-red font-bold' : 'text-gray-800 font-medium';
                     }
-                    $holNameJs = addslashes($holName);
+                    $labelJs = addslashes($customLabel);
                 @endphp
 
                 <div class="min-h-[52px] sm:min-h-[70px] border-b border-r border-gray-100 p-1 sm:p-1.5 relative select-none {{ $bg }} {{ $isToday ? 'ring-2 ring-inset ring-upi-red' : '' }}"
-                    onclick="handleDayClick('{{ $dateStr }}', '{{ $action }}', '{{ $holNameJs }}', {{ $count }})">
+                    onclick="handleDayClick('{{ $dateStr }}', '{{ $action }}', '{{ $labelJs }}', {{ $count }})">
 
                     {{-- Day number --}}
                     <span class="text-sm {{ $numCls }}">{{ $day }}</span>
@@ -118,18 +128,25 @@ $nextYear    = $month == 12 ? $year + 1 : $year;
                         <span class="absolute top-0.5 right-0.5 text-[9px] sm:text-[10px] bg-upi-red text-white rounded px-1 py-0.5 leading-none">Hari ini</span>
                     @endif
 
-                    {{-- Holiday / Weekend label --}}
-                    @if($isHoliday && !$isPast)
-                        <div class="mt-0.5 text-[9px] sm:text-[10px] text-red-500 leading-tight truncate hidden sm:block" title="{{ $holName }}">
-                            🔴 {{ Str::limit($holName, 12) }}
-                        </div>
-                        <div class="mt-0.5 text-[9px] text-red-500 sm:hidden">🔴</div>
-                    @elseif($isWeekend && !$isPast)
-                        @php $isFri = ($date->dayOfWeek == 5); @endphp
-                        <div class="mt-0.5 text-[9px] sm:text-[10px] text-red-400">
-                            <span class="hidden sm:inline">{{ $isFri ? 'Jumat' : 'Libur' }}</span>
-                            <span class="sm:hidden">🔴</span>
-                        </div>
+                    {{-- Holiday / Override / Weekend label --}}
+                    @if(!$isPast)
+                        @if($override && $customLabel)
+                            <div class="mt-0.5 text-[9px] sm:text-[10px] {{ $isBlocked ? 'text-red-500' : 'text-emerald-600' }} leading-tight truncate hidden sm:block" title="{{ $customLabel }}">
+                                {{ $isBlocked ? '🔴' : '🟢' }} {{ Str::limit($customLabel, 12) }}
+                            </div>
+                            <div class="mt-0.5 text-[9px] {{ $isBlocked ? 'text-red-500' : 'text-emerald-600' }} sm:hidden">{{ $isBlocked ? '🔴' : '🟢' }}</div>
+                        @elseif($isHoliday)
+                            <div class="mt-0.5 text-[9px] sm:text-[10px] text-red-500 leading-tight truncate hidden sm:block" title="{{ $holName }}">
+                                🔴 {{ Str::limit($holName, 12) }}
+                            </div>
+                            <div class="mt-0.5 text-[9px] text-red-500 sm:hidden">🔴</div>
+                        @elseif($isWeekend)
+                            @php $isFri = ($date->dayOfWeek == 5); @endphp
+                            <div class="mt-0.5 text-[9px] sm:text-[10px] text-red-400">
+                                <span class="hidden sm:inline">{{ $isFri ? 'Jumat' : 'Libur' }}</span>
+                                <span class="sm:hidden">🔴</span>
+                            </div>
+                        @endif
                     @endif
 
                     {{-- Approved visit count badge --}}
@@ -324,17 +341,22 @@ function formatTanggal(dateStr) {
     return `${DAY_NAMES[date.getDay()]}, ${d} ${MONTH_NAMES[m - 1]} ${y}`;
 }
 
-function handleDayClick(dateStr, action, holidayName, approvedCount) {
-    if (action === 'past')    return; // grey, do nothing
+function handleDayClick(dateStr, action, label, approvedCount) {
+    if (action === 'past')    return; 
     if (action === 'toosoon') { openModal('toosoon'); return; }
     if (action === 'holiday') {
         document.getElementById('holiday-reason').textContent = 'Mohon maaf, UPI tidak menerima kunjungan pada hari libur nasional.';
-        document.getElementById('holiday-name').textContent   = holidayName;
+        document.getElementById('holiday-name').textContent   = label;
         openModal('holiday'); return;
     }
     if (action === 'weekend') {
         document.getElementById('holiday-reason').textContent = 'Mohon maaf, UPI tidak menerima kunjungan pada hari Sabtu dan Minggu.';
         document.getElementById('holiday-name').textContent   = 'Akhir Pekan (Sabtu / Minggu)';
+        openModal('holiday'); return;
+    }
+    if (action === 'blocked') {
+        document.getElementById('holiday-reason').textContent = 'Mohon maaf, kunjungan untuk tanggal ini ditutup oleh admin.';
+        document.getElementById('holiday-name').textContent   = label || 'Penutupan Operasional';
         openModal('holiday'); return;
     }
     // action === 'ok'

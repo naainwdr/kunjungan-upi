@@ -85,8 +85,8 @@
             </span>
             <span>|</span>
             <span class="flex items-center gap-1.5">
-                <svg class="w-3 h-3 text-upi-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                humas@upi.edu
+                <svg class="w-3 h-3 text-upi-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                laporan-ult.upi.edu/lapor
             </span>
             <span>|</span>
             <span class="flex items-center gap-1.5">
@@ -260,9 +260,9 @@
                         <span class="w-7 h-7 bg-gray-800 group-hover:bg-green-600 rounded-lg flex items-center justify-center transition-colors flex-shrink-0">📲</span>
                         085133332559 (WA)
                     </a>
-                    <a href="mailto:humas@upi.edu" class="flex items-center gap-2.5 text-gray-400 hover:text-white transition-colors text-xs group">
-                        <span class="w-7 h-7 bg-gray-800 group-hover:bg-upi-red rounded-lg flex items-center justify-center transition-colors flex-shrink-0">✉️</span>
-                        humas@upi.edu
+                    <a href="https://laporan-ult.upi.edu/lapor" target="_blank" class="flex items-center gap-2.5 text-gray-400 hover:text-white transition-colors text-xs group">
+                        <span class="w-7 h-7 bg-gray-800 group-hover:bg-upi-red rounded-lg flex items-center justify-center transition-colors flex-shrink-0">🔗</span>
+                        Situs ULT UPI
                     </a>
                     <a href="https://www.upi.edu" target="_blank" class="flex items-center gap-2.5 text-gray-400 hover:text-white transition-colors text-xs group">
                         <span class="w-7 h-7 bg-gray-800 group-hover:bg-upi-red rounded-lg flex items-center justify-center transition-colors flex-shrink-0">🌐</span>

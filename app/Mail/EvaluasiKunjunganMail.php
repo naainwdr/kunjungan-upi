@@ -30,7 +30,7 @@ class EvaluasiKunjunganMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Form Evaluasi Kunjungan - ' . $this->kunjungan->nomor_registrasi,
+            subject: '[UPI] Form Evaluasi Kunjungan - ' . $this->kunjungan->nomor_registrasi,
         );
     }
 

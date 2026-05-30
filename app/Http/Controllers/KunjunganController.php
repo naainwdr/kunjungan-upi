@@ -7,6 +7,7 @@ use App\Models\Sekolah;
 use App\Models\KontakSekolah;
 use App\Models\Tempat;
 use App\Models\Sesi;
+use App\Models\PengaturanKalender;
 use App\Mail\StatusKunjunganMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -42,10 +43,15 @@ class KunjunganController extends Controller
             ->map->count();
 
         $holidays    = $this->nationalHolidays($year);
+        $overrides   = PengaturanKalender::whereYear('tanggal', $year)
+            ->whereMonth('tanggal', $month)
+            ->get()
+            ->keyBy(fn($i) => $i->tanggal->format('Y-m-d'));
+            
         $servicedays = [1, 2, 3, 4]; // Senin–Kamis
 
         return view('public.kalender', compact(
-            'year', 'month', 'approvedVisits', 'approvedVisitsList', 'holidays', 'servicedays'
+            'year', 'month', 'approvedVisits', 'approvedVisitsList', 'holidays', 'servicedays', 'overrides'
         ));
     }
 
@@ -54,7 +60,33 @@ class KunjunganController extends Controller
     {
         $tanggal = $request->get('tanggal');
         $tempat  = Tempat::where('aktif', true)->get();
-        $sesi    = Sesi::where('aktif', true)->orderBy('jam_mulai')->get();
+        
+        // Base Sesi Query
+        $sesiQuery = Sesi::where('aktif', true)->orderBy('jam_mulai');
+        
+        if ($tanggal) {
+            $override = PengaturanKalender::where('tanggal', $tanggal)->first();
+            if ($override) {
+                if ($override->is_libur) {
+                    return redirect()->route('kalender')->with('error', 'Maaf, tanggal tersebut tidak melayani kunjungan.');
+                }
+                // Filter sessions by override
+                $sesiQuery->whereIn('id', $override->sesi_tersedia ?? []);
+            } else {
+                // Check if it's a default off day (Fri-Sun)
+                $dayOfWeek = Carbon::parse($tanggal)->dayOfWeek;
+                if (!in_array($dayOfWeek, [1, 2, 3, 4])) { // Not Mon-Thu
+                    return redirect()->route('kalender')->with('error', 'Maaf, hari tersebut tidak melayani kunjungan.');
+                }
+            }
+        }
+        
+        $sesi = $sesiQuery->get();
+        
+        if ($sesi->isEmpty() && $tanggal) {
+            return redirect()->route('kalender')->with('error', 'Maaf, tidak ada sesi tersedia untuk tanggal tersebut.');
+        }
+
         return view('public.reservasi', compact('tanggal', 'tempat', 'sesi'));
     }
 
@@ -71,7 +103,7 @@ class KunjunganController extends Controller
             'jabatan_pic'       => 'required|in:kepsek,guru,tendik',
             'email_pic'         => 'required|email|max:255',
             'telepon_pic'       => 'required|string|max:20',
-            'tanggal_kunjungan' => 'required|date|after_or_equal:' . now()->addDays(7)->format('Y-m-d'),
+            'tanggal_kunjungan' => 'required|date|after_or_equal:' . now()->addDays(10)->format('Y-m-d'),
             'sesi_id'           => 'required|exists:sesi,id',
             'tempat_id'         => 'required|exists:tempat,id',
             'jumlah_peserta'    => 'required|integer|min:1',
@@ -90,7 +122,7 @@ class KunjunganController extends Controller
             'email_pic.required'         => 'Email penanggungjawab wajib diisi.',
             'telepon_pic.required'       => 'Nomor telepon penanggungjawab wajib diisi.',
             'tanggal_kunjungan.required' => 'Tanggal kunjungan wajib diisi.',
-            'tanggal_kunjungan.after_or_equal' => 'Tanggal kunjungan minimal 7 hari dari sekarang.',
+            'tanggal_kunjungan.after_or_equal' => 'Tanggal kunjungan minimal 10 hari dari sekarang.',
             'sesi_id.required'           => 'Sesi kunjungan wajib dipilih.',
             'sesi_id.exists'             => 'Sesi tidak valid.',
             'tempat_id.required'         => 'Tempat kunjungan wajib dipilih.',
@@ -230,8 +262,8 @@ class KunjunganController extends Controller
     {
         $kunjungan = Kunjungan::where('nomor_registrasi', $id)->firstOrFail();
 
-        if (now()->startOfDay()->gt($kunjungan->tanggal_kunjungan->clone()->subDays(7)->startOfDay())) {
-            return back()->with('error', 'Pembatalan ditolak. Batas pembatalan adalah H-7 sebelum kunjungan.');
+        if (now()->startOfDay()->gt($kunjungan->tanggal_kunjungan->clone()->subDays(5)->startOfDay())) {
+            return back()->with('error', 'Pembatalan ditolak. Batas pembatalan adalah H-5 sebelum kunjungan.');
         }
 
         $kunjungan->logStatus('cancelled', 'Dibatalkan oleh pemohon.');
@@ -240,18 +272,44 @@ class KunjunganController extends Controller
         return back()->with('success', 'Permohonan kunjungan berhasil dibatalkan.');
     }
 
-    /** API: sesi yang sudah penuh di tanggal tertentu */
+    /** API: sesi yang sudah penuh atau tidak tersedia di tanggal tertentu */
     public function bookedSesi(Request $request)
     {
         $tanggal  = $request->query('tanggal');
         $tempatId = $request->query('tempat_id');
         if (!$tanggal) return response()->json([]);
 
-        $query = Kunjungan::where('tanggal_kunjungan', $tanggal)->where('status', 'approved');
-        if ($tempatId) $query->where('tempat_id', $tempatId);
+        $booked = [];
 
-        $booked = $query->pluck('sesi_id')->unique()->values();
-        return response()->json($booked);
+        // 1. Ambil dari pengaturan kalender (override)
+        $override = PengaturanKalender::where('tanggal', $tanggal)->first();
+        if ($override) {
+            if ($override->is_libur) {
+                // Jika libur, semua sesi dianggap tidak tersedia
+                $booked = Sesi::pluck('id')->toArray();
+            } else {
+                // Sesi yang TIDAK ada di array sesi_tersedia dianggap tidak tersedia
+                $semuaSesi = Sesi::pluck('id')->toArray();
+                $tersedia = $override->sesi_tersedia ?? [];
+                $booked = array_diff($semuaSesi, $tersedia);
+            }
+        } else {
+            // Default: Jumat, Sabtu, Minggu libur (0, 5, 6)
+            $dayOfWeek = Carbon::parse($tanggal)->dayOfWeek;
+            if (!in_array($dayOfWeek, [1, 2, 3, 4])) {
+                $booked = Sesi::pluck('id')->toArray();
+            }
+        }
+
+        // 2. Tambahkan sesi yang sudah disetujui (Approved) untuk tempat yang dipilih
+        $query = Kunjungan::where('tanggal_kunjungan', $tanggal)->where('status', 'approved');
+        if ($tempatId) {
+            $query->where('tempat_id', $tempatId);
+        }
+        $alreadyApproved = $query->pluck('sesi_id')->toArray();
+        
+        $merged = array_merge($booked, $alreadyApproved);
+        return response()->json(array_values(array_unique($merged)));
     }
 
     /** Evaluasi Form */

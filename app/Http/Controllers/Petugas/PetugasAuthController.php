@@ -1,21 +1,21 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Petugas;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class AuthController extends Controller
+class PetugasAuthController extends Controller
 {
     public function showLogin()
     {
         if (Auth::check()) {
-            return Auth::user()->isAdmin()
-                ? redirect()->route('admin.dashboard')
-                : redirect()->route('petugas.scanner');
+            return Auth::user()->isPetugas()
+                ? redirect()->route('petugas.scanner')
+                : redirect()->route('admin.dashboard');
         }
-        return view('admin.login');
+        return view('petugas.login');
     }
 
     public function login(Request $request)
@@ -33,14 +33,14 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             // Arahkan berdasarkan role
-            if (Auth::user()->isAdmin()) {
-                return redirect()->route('admin.dashboard');
+            if (Auth::user()->isPetugas()) {
+                return redirect()->route('petugas.scanner');
             }
 
-            // Jika role bukan admin, logout dan tolak
+            // Jika bukan petugas (misal: admin), logout dan tolak
             Auth::logout();
             return back()->withErrors([
-                'email' => 'Akun ini bukan akun Admin. Gunakan halaman login Petugas.',
+                'email' => 'Akun ini bukan akun Petugas Presensi. Gunakan halaman login Admin.',
             ])->onlyInput('email');
         }
 
@@ -54,6 +54,6 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route('admin.login');
+        return redirect()->route('petugas.login');
     }
 }

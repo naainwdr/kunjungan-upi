@@ -19,7 +19,7 @@ class SurveiKunjunganMail extends Mailable
     public function build(): static
     {
         return $this
-            ->subject('Form Survei Kepuasan Kunjungan UPI — ' . $this->kunjungan->nomor_registrasi)
+            ->subject('[UPI] Form Survei Kepuasan Kunjungan UPI — ' . $this->kunjungan->nomor_registrasi)
             ->markdown('emails.survei-kunjungan');
     }
 }

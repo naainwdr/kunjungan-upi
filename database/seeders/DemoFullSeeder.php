@@ -196,10 +196,33 @@ class DemoFullSeeder extends Seeder
             ]);
         }
 
+        // ─────────────────────────────────────────────────
+        // 5. Pengaturan Kalender (Overrides)
+        // ─────────────────────────────────────────────────
+        DB::table('pengaturan_kalender')->insert([
+            [
+                'tanggal'       => Carbon::today()->addDays(14)->format('Y-m-d'),
+                'is_libur'      => true,
+                'sesi_tersedia' => json_encode([]),
+                'catatan'       => 'Libur Ujian Akhir Semester',
+                'created_at'    => now(),
+                'updated_at'    => now(),
+            ],
+            [
+                'tanggal'       => Carbon::today()->addDays(16)->format('Y-m-d'),
+                'is_libur'      => false,
+                'sesi_tersedia' => json_encode([$sesiIds[0] ?? 1]), // Hanya Sesi 1
+                'catatan'       => 'Hanya menerima kunjungan Sesi 1',
+                'created_at'    => now(),
+                'updated_at'    => now(),
+            ]
+        ]);
+
         $this->command->info('✅ DemoFullSeeder selesai:');
         $this->command->info('   → 10 sekolah & kontak');
         $this->command->info('   → 13 kunjungan (completed/approved/pending/rejected/cancelled)');
         $this->command->info('   → 7 presensi (6 check-in+out, 1 check-in saja)');
         $this->command->info('   → 6 survei kepuasan (5 publik, 1 private)');
+        $this->command->info('   → 2 pengaturan kalender (1 libur, 1 terbatas)');
     }
 }

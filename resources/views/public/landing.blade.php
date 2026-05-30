@@ -169,7 +169,7 @@
                     </div>
                     <div>
                         <h3 class="font-semibold text-white text-sm mb-1">Sesi Kunjungan</h3>
-                        <p class="text-gray-400 text-xs leading-relaxed"><strong class="text-gray-200">Sesi 1:</strong> 09.00 &ndash; 12.00 WIB<br><strong class="text-gray-200">Sesi 2:</strong> 13.00 &ndash; 15.00 WIB<br>Harap tiba <strong class="text-gray-200">30 menit sebelum sesi</strong> untuk keperluan registrasi.</p>
+                        <p class="text-gray-400 text-xs leading-relaxed"><strong class="text-gray-200">Sesi 1:</strong> 09.00 &ndash; 11.00 WIB<br><strong class="text-gray-200">Sesi 2:</strong> 13.00 &ndash; 15.00 WIB<br>Harap tiba <strong class="text-gray-200">30 menit sebelum sesi</strong> untuk keperluan registrasi.</p>
                     </div>
                 </div>
             </div>
@@ -184,7 +184,7 @@
                     </div>
                     <div>
                         <h3 class="font-semibold text-white text-sm mb-1">Pilihan Tempat</h3>
-                        <p class="text-gray-400 text-xs leading-relaxed">Gedung UC Lt.1 (60) &middot; Aud. FPMIPA (300) &middot; Aud. FPEB (200) &middot; Amphiteater (300) &middot; Aula PKM Lt.2 (200). Peserta tidak boleh melebihi kapasitas tempat.</p>
+                        <p class="text-gray-400 text-xs leading-relaxed">Gedung UC Lt.1 (100) &middot; Aud. FPMIPA (400) &middot; Aud. FPEB (300) &middot; Amphiteater (300) &middot; Aula PKM Lt.2 (200). Peserta tidak boleh melebihi kapasitas tempat.</p>
                     </div>
                 </div>
             </div>
@@ -229,7 +229,7 @@
                     </div>
                     <div>
                         <h3 class="font-semibold text-white text-sm mb-1">Kontak Kami</h3>
-                        <p class="text-gray-400 text-xs leading-relaxed">WhatsApp: <strong class="text-gray-200">085133332559</strong><br>Email: <strong class="text-gray-200">humas@upi.edu</strong><br>Telepon: (022) 2013163</p>
+                        <p class="text-gray-400 text-xs leading-relaxed">WhatsApp: <strong class="text-gray-200">085133332559</strong><br>Situs ULT: <strong class="text-gray-200"><a href="https://laporan-ult.upi.edu/lapor" class="text-upi-gold hover:underline" target="_blank">https://laporan-ult.upi.edu/lapor</a></strong><br>Telepon: (022) 2013163</p>
                     </div>
                 </div>
             </div>

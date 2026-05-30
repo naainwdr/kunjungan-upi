@@ -382,6 +382,7 @@ function updateKapasitas() {
         info.classList.add('hidden');
         pesertaInput.max = 500;
     }
+    fetchBookedHours();
 }
 
 // ── File drop/select ───────────────────────────────────
@@ -414,7 +415,51 @@ function handleSubmit(form) {
     return true;
 }
 
-window.addEventListener('DOMContentLoaded', () => { updateKapasitas(); });
+// ── Sesi Availability ─────────────────────────────────
+async function fetchBookedHours() {
+    const tanggal = document.getElementById('tanggal_kunjungan')?.value;
+    const tempatId = document.getElementById('tempat')?.value;
+    const btnSubmit = document.getElementById('btn-submit');
+    
+    if (!tanggal) return;
+
+    try {
+        const response = await fetch(`/api/booked-sesi?tanggal=${tanggal}&tempat_id=${tempatId || ''}`);
+        const bookedSesi = await response.json();
+
+        const radios = document.querySelectorAll('input[name="sesi_id"]');
+        let availableCount = 0;
+
+        radios.forEach(radio => {
+            const container = radio.closest('label');
+            const isBooked = bookedSesi.includes(parseInt(radio.value)) || bookedSesi.includes(radio.value);
+            
+            if (isBooked) {
+                radio.disabled = true;
+                radio.checked = false;
+                container.classList.add('opacity-40', 'grayscale', 'cursor-not-allowed');
+                container.classList.remove('cursor-pointer');
+            } else {
+                radio.disabled = false;
+                container.classList.remove('opacity-40', 'grayscale', 'cursor-not-allowed');
+                container.classList.add('cursor-pointer');
+                availableCount++;
+            }
+        });
+
+        if (availableCount === 0) {
+            // Show alert or message
+            console.log('Tidak ada sesi tersedia');
+        }
+    } catch (error) {
+        console.error('Gagal mengambil data sesi:', error);
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => { 
+    updateKapasitas(); 
+    fetchBookedHours();
+});
 </script>
 @endpush
 @endsection
