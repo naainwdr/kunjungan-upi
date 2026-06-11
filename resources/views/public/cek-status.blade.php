@@ -109,7 +109,7 @@
                     </div>
                     @elseif($item->status === 'rejected')
                     <div class="mt-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-800">
-                        ❌ Mohon maaf, pengajuan kunjungan Anda tidak dapat kami proses. Silakan buat pengajuan baru atau hubungi Humas UPI.
+                        ❌ Mohon maaf, pengajuan kunjungan Anda tidak dapat kami proses. Silakan buat pengajuan baru atau hubungi Admin KKIPP UPI.
                     </div>
                     @elseif($item->status === 'cancelled')
                     <div class="mt-3 bg-gray-100 border border-gray-300 rounded-lg px-4 py-3 text-sm text-gray-700">
@@ -166,7 +166,7 @@
                         @else
                             <div class="mt-4 pt-4 border-t border-gray-100">
                                 <p class="text-xs text-red-500 font-semibold">⚠️ Batas waktu pembatalan online telah lewat (H-7).</p>
-                                <p class="text-xs text-gray-500">Jika batal hadir, segera hubungi Humas UPI:<br>
+                                <p class="text-xs text-gray-500">Jika batal hadir, segera hubungi Admin KKIPP UPI:<br>
                                     📲 WhatsApp: <a href="https://wa.me/6285133332559" target="_blank" class="text-green-600 font-semibold hover:underline">085133332559</a> &bull;
                                     ✉️ <a href="mailto:humas@upi.edu" class="text-blue-600 hover:underline">humas@upi.edu</a>
                                 </p>

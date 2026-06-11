@@ -73,7 +73,7 @@
 
     <div class="relative max-w-6xl mx-auto px-4 py-14 md:py-20 text-center">
         <div class="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white text-xs font-semibold px-4 py-1.5 rounded-full mb-5">
-            🎓 Humas Universitas Pendidikan Indonesia
+            KKIPP Universitas Pendidikan Indonesia
         </div>
         <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4">
             Permohonan Kunjungan Sekolah
@@ -189,7 +189,7 @@
                 </div>
             </div>
 
-            {{-- Card 4: Pengajuan H-7 --}}
+            {{-- Card 4: Pengajuan H-10 --}}
             <div class="border border-white/10 bg-white/5 rounded-xl p-5 hover:bg-white/[0.08] transition-colors">
                 <div class="flex items-start gap-4">
                     <div class="w-9 h-9 rounded-lg border border-white/20 flex items-center justify-center flex-shrink-0">
@@ -198,8 +198,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="font-semibold text-white text-sm mb-1">Pengajuan Minimal H&#8209;7</h3>
-                        <p class="text-gray-400 text-xs leading-relaxed">Permohonan harus dikirimkan paling lambat <strong class="text-gray-200">7 hari</strong> sebelum tanggal kunjungan yang dipilih.</p>
+                        <h3 class="font-semibold text-white text-sm mb-1">Pengajuan Minimal H&#8209;10</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed">Permohonan harus dikirimkan paling lambat <strong class="text-gray-200">10 hari</strong> sebelum tanggal kunjungan yang dipilih.</p>
                     </div>
                 </div>
             </div>
@@ -229,7 +229,7 @@
                     </div>
                     <div>
                         <h3 class="font-semibold text-white text-sm mb-1">Kontak Kami</h3>
-                        <p class="text-gray-400 text-xs leading-relaxed">WhatsApp: <strong class="text-gray-200">085133332559</strong><br>Situs ULT: <strong class="text-gray-200"><a href="https://laporan-ult.upi.edu/lapor" class="text-upi-gold hover:underline" target="_blank">https://laporan-ult.upi.edu/lapor</a></strong><br>Telepon: (022) 2013163</p>
+                        <p class="text-gray-400 text-xs leading-relaxed">WhatsApp: <strong class="text-gray-200">085133332559</strong><br>Situs ULT: <strong class="text-gray-200"><a href="https://laporan-ult.upi.edu/lapor" class="text-upi-gold hover:underline" target="_blank">https://laporan-ult.upi.edu/lapor</a></strong><br></p>
                     </div>
                 </div>
             </div>

@@ -30,6 +30,17 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="bg-red-100 text-red-800 px-4 py-3 rounded-lg mb-4 text-sm font-medium">
+            Terdapat kesalahan:
+            <ul class="list-disc list-inside mt-1">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Calendar Grid --}}
         <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
@@ -66,7 +77,7 @@
                     @endphp
                     
                     <button type="button" 
-                            onclick="openSetting('{{ $dateStr }}', {{ $isLibur ? 'true' : 'false' }}, {{ json_encode($setting ? $setting->sesi_tersedia : ($isWeekend ? [] : $sesi->pluck('id'))) }}, '{{ $setting ? $setting->catatan : '' }}')"
+                            onclick="openSetting('{{ $dateStr }}', {{ $isLibur ? 'true' : 'false' }}, {{ json_encode($setting ? $setting->sesi_tersedia : ($isWeekend ? [] : $sesi->pluck('id'))) }}, '{{ $setting ? addslashes($setting->catatan) : '' }}', {{ $setting ? $setting->id : 'null' }})"
                             class="aspect-square p-1 rounded-lg border transition-all flex flex-col items-center justify-center gap-1
                             {{ $isLibur ? 'bg-red-50 border-red-100 text-red-600' : 'bg-white border-gray-100 hover:border-upi-red hover:shadow-md' }}
                             {{ $currentDate->isToday() ? 'ring-2 ring-upi-red ring-offset-2' : '' }}">
@@ -107,7 +118,7 @@
                     <div class="space-y-6">
                         <div class="flex items-center p-3 bg-gray-50 rounded-xl border border-gray-200">
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="is_libur" id="input-is-libur" class="sr-only peer" onchange="toggleLibur(this.checked)">
+                                <input type="checkbox" name="is_libur" id="input-is-libur" value="1" class="sr-only peer" onchange="toggleLibur(this.checked)">
                                 <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
                                 <span class="ml-3 text-sm font-bold text-gray-700">Set sebagai Hari Libur</span>
                             </label>
@@ -148,8 +159,14 @@
     </div>
 </div>
 
+{{-- Form untuk Reset --}}
+<form id="form-delete-kalender" method="POST" class="hidden">
+    @csrf
+    @method('DELETE')
+</form>
+
 <script>
-function openSetting(date, isLibur, sesiIds, catatan) {
+function openSetting(date, isLibur, sesiIds, catatan, id) {
     document.getElementById('no-selection').classList.add('hidden');
     document.getElementById('selection-form').classList.remove('hidden');
     
@@ -170,6 +187,21 @@ function openSetting(date, isLibur, sesiIds, catatan) {
     
     // Set catatan
     document.getElementById('input-catatan').value = catatan || '';
+    
+    // Set tombol reset
+    const btnReset = document.getElementById('btn-reset');
+    if (id) {
+        btnReset.classList.remove('hidden');
+        btnReset.onclick = function() {
+            if (confirm('Kembalikan tanggal ini ke aturan ketersediaan default?')) {
+                const form = document.getElementById('form-delete-kalender');
+                form.action = `/admin/kalender/${id}`;
+                form.submit();
+            }
+        };
+    } else {
+        btnReset.classList.add('hidden');
+    }
 }
 
 function toggleLibur(checked) {

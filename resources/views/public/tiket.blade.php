@@ -116,7 +116,7 @@
         {{-- Footer ticket --}}
         <div class="bg-gray-50 border-t border-dashed border-gray-200 px-6 py-3 text-center">
             <p class="text-[10px] text-gray-400">Tiket ini berlaku sebagai bukti permohonan kunjungan yang telah disetujui.</p>
-            <p class="text-[10px] text-gray-400">Info: humas@upi.edu · (022) 2013163 · 085133332559</p>
+            <p class="text-[10px] text-gray-400">Info: humas@upi.edu · 085133332559</p>
         </div>
     </div>
 

@@ -7,13 +7,13 @@ Yth. Bapak/Ibu **{{ $kunjungan->kontak->nama }}**,
 ---
 
 @if($kunjungan->status === 'pending')
-Kami telah menerima pengajuan reservasi kunjungan dari sekolah Anda. Pengajuan akan diverifikasi oleh tim Humas UPI dalam **3–5 hari kerja**.
+Kami telah menerima pengajuan reservasi kunjungan dari sekolah Anda. Pengajuan akan diverifikasi oleh tim KKIPP UPI dalam **3–5 hari kerja**.
 
 @elseif($kunjungan->status === 'approved')
 Dengan senang hati, kami informasikan bahwa pengajuan kunjungan sekolah Anda telah **disetujui**. Harap datang tepat waktu sesuai jadwal yang telah ditetapkan.
 
 @else
-Kami menyampaikan bahwa pengajuan kunjungan sekolah Anda **tidak dapat kami proses** saat ini. Untuk informasi lebih lanjut, silakan menghubungi Humas UPI.
+Kami menyampaikan bahwa pengajuan kunjungan sekolah Anda **tidak dapat kami proses** saat ini. Untuk informasi lebih lanjut, silakan menghubungi Admin KKIPP UPI.
 
 @endif
 
@@ -44,12 +44,11 @@ Pantau Status Pengajuan
 ---
 
 Untuk pertanyaan lebih lanjut, hubungi kami:
-- 📞 **Telepon:** (022) 2013163
 - 📲 **WhatsApp:** 085133332559
-- ✉️ **Email:** humas@upi.edu
+- ✉️ **Situs Lapor:** laporan-ult.upi.edu/lapor
 - 🕐 **Jam Operasional:** Senin–Kamis, 09.00–15.00 WIB
 
 Salam hormat,
-**Humas Universitas Pendidikan Indonesia**
+**KKIPP Universitas Pendidikan Indonesia**
 
 @endcomponent

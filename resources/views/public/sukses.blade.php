@@ -16,7 +16,7 @@
         <h1 class="text-2xl font-bold text-gray-800 mb-2">Permohonan Berhasil Dikirim!</h1>
         <p class="text-gray-500 text-sm mb-6">
             Terima kasih, <strong>{{ $kunjungan->sekolah->nama }}</strong>.<br>
-            Permohonan kunjungan Anda telah kami terima dan sedang dalam proses verifikasi oleh tim Humas UPI.
+            Permohonan kunjungan Anda telah kami terima dan sedang dalam proses verifikasi oleh tim KKIPP UPI.
         </p>
 
         {{-- Nomor Registrasi --}}

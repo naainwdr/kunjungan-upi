@@ -15,6 +15,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'role.admin'   => \App\Http\Middleware\EnsureIsAdmin::class,
             'role.petugas' => \App\Http\Middleware\EnsureIsPetugas::class,
         ]);
+
+        $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
+            if ($request->is('petugas*')) {
+                return route('petugas.login');
+            }
+            return route('admin.login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

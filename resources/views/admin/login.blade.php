@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Admin | Humas UPI</title>
+    <title>Login Admin | KKIPP UPI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config={theme:{extend:{colors:{upi:{red:'#800000',dark:'#600000',light:'#9a0000',black:'#111111',gold:'#FFCC00'}}}}}</script>
     <style>body{font-family:'Segoe UI',system-ui,sans-serif;}</style>
@@ -13,7 +13,7 @@
         {{-- Logo --}}
         <div class="text-center mb-6">
             <div class="w-16 h-16 bg-upi-red text-white rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-3">U</div>
-            <h1 class="text-lg font-bold text-gray-800">Panel Admin Humas UPI</h1>
+            <h1 class="text-lg font-bold text-gray-800">Panel Admin KKIPP UPI</h1>
             <p class="text-gray-500 text-sm">Sistem Permohonan Kunjungan Sekolah</p>
         </div>
 

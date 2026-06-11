@@ -20,8 +20,8 @@ Form evaluasi dapat diisi dalam waktu 7 hari setelah email ini dikirim.
 Terima kasih atas partisipasi Anda!
 
 Salam,  
-**Humas & Protokol UPI**  
+**KKIPP UPI**  
 📧 humas@upi.edu  
-📞 (022) 2013163
+📞 085133332559 (WhatsApp)
 
 @endcomponent

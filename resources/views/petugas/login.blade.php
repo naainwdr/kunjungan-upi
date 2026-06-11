@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Petugas Presensi | Humas UPI</title>
+    <title>Login Petugas Presensi | KKIPP UPI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config={theme:{extend:{colors:{upi:{red:'#800000',dark:'#600000',light:'#9a0000',black:'#111111',gold:'#FFCC00'}}}}}</script>
     <style>body{font-family:'Segoe UI',system-ui,sans-serif;}</style>
@@ -16,7 +16,7 @@
                 📋
             </div>
             <h1 class="text-lg font-bold text-gray-800">Portal Petugas Presensi</h1>
-            <p class="text-gray-500 text-sm">Scanner Kunjungan Sekolah — Humas UPI</p>
+            <p class="text-gray-500 text-sm">Scanner Kunjungan Sekolah — KKIPP UPI</p>
         </div>
 
         {{-- Badge Info --}}

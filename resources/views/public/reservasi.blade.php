@@ -18,7 +18,7 @@
     {{-- Header --}}
     <div class="bg-gradient-to-r from-upi-red to-red-800 rounded-2xl p-6 mb-6 text-white shadow-lg">
         <h1 class="text-2xl font-bold mb-1">📋 Formulir Permohonan Kunjungan</h1>
-        <p class="text-red-200 text-sm">Universitas Pendidikan Indonesia — Humas & Protokol</p>
+        <p class="text-red-200 text-sm">Universitas Pendidikan Indonesia —  KKIPP</p>
     </div>
 
     {{-- Errors Global --}}
@@ -172,14 +172,14 @@
                             </div>
                             <a href="{{ route('kalender') }}" class="text-xs text-upi-red hover:underline whitespace-nowrap">Ganti tanggal</a>
                         </div>
-                        <input type="hidden" name="tanggal_kunjungan" value="{{ old('tanggal_kunjungan', $tanggal) }}">
+                        <input type="hidden" id="tanggal_kunjungan" name="tanggal_kunjungan" value="{{ old('tanggal_kunjungan', $tanggal) }}">
                     @else
                         <input type="date" id="tanggal_kunjungan" name="tanggal_kunjungan"
                             class="w-full border @error('tanggal_kunjungan') border-red-400 bg-red-50 @else border-gray-300 @enderror rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-upi-red/40"
                             value="{{ old('tanggal_kunjungan') }}"
-                            min="{{ now()->addDays(7)->toDateString() }}" 
+                            min="{{ now()->addDays(10)->toDateString() }}" 
                             onchange="fetchBookedHours()" required>
-                        <p class="text-gray-400 text-xs mt-1">📅 Minimal 7 hari dari hari ini. Hanya <strong>Senin–Kamis</strong>.
+                        <p class="text-gray-400 text-xs mt-1">📅 Minimal 10 hari dari hari ini. Hanya <strong>Senin–Kamis</strong>.
                             <a href="{{ route('kalender') }}" class="text-upi-red hover:underline ml-1">Pilih dari kalender →</a>
                         </p>
                     @endif

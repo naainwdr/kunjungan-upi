@@ -20,7 +20,7 @@ Isi Form Survei Kepuasan
 Terima kasih atas partisipasi dan kepercayaan Anda kepada UPI!
 
 Salam hangat,
-**Humas & Protokol UPI**
-📧 humas@upi.edu · 📞 (022) 2013163 · 📲 085133332559
+**KKIPP UPI**
+📧 humas@upi.edu · 📲 085133332559 (WhatsApp)
 
 @endcomponent

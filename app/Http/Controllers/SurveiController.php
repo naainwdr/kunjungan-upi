@@ -2,77 +2,99 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreSurveiRequest;
 use App\Models\Kunjungan;
-use App\Models\SurveiKepuasan;
-use Illuminate\Http\Request;
+use App\Services\SurveiService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
+/**
+ * Controller untuk form survei kepuasan kunjungan (publik).
+ *
+ * Survei kepuasan dapat diisi oleh PIC sekolah setelah kunjungan selesai
+ * (sudah check-out) dalam rentang waktu 7 hari. Link survei dikirim otomatis
+ * melalui email setelah petugas/admin melakukan check-out.
+ *
+ * Controller ini mendelegasikan semua validasi akses dan penyimpanan data
+ * ke SurveiService.
+ */
 class SurveiController extends Controller
 {
-    /** Form survei publik */
-    public function form($nomorRegistrasi)
+    /**
+     * Inisialisasi controller dengan dependency injection SurveiService.
+     *
+     * @param  SurveiService $surveiService Service untuk logika survei kepuasan
+     */
+    public function __construct(
+        private readonly SurveiService $surveiService,
+    ) {}
+
+    /**
+     * Menampilkan form survei kepuasan kunjungan.
+     *
+     * Beberapa kondisi dapat menghasilkan tampilan berbeda:
+     * - 'belum_checkout': kunjungan belum selesai check-out
+     * - 'sudah_isi': pemohon sudah pernah mengisi survei ini
+     * - 'kadaluarsa': sudah lewat 7 hari dari check-out
+     * - 'ok': form bisa diakses dan diisi
+     *
+     * @param  string $nomor Nomor registrasi kunjungan
+     * @return View
+     */
+    public function form(string $nomor): View
     {
-        $kunjungan = Kunjungan::with(['sekolah', 'kontak', 'presensi', 'survei'])
-            ->where('nomor_registrasi', $nomorRegistrasi)
-            ->firstOrFail();
+        // Delegasikan validasi akses ke service — service mengembalikan status dan data kunjungan
+        $validasi = $this->surveiService->validateFormAkses($nomor);
 
-        // Validasi: harus sudah check-out
-        if (!$kunjungan->presensi?->waktu_keluar) {
-            return view('public.survei', ['kunjungan' => $kunjungan, 'belumCheckout' => true]);
-        }
+        $kunjungan = $validasi['kunjungan']; // Data kunjungan untuk ditampilkan di view
+        $status    = $validasi['status'];    // Status akses: 'ok', 'belum_checkout', 'sudah_isi', 'kadaluarsa'
 
-        // Validasi: sudah pernah isi
-        if ($kunjungan->survei) {
-            return view('public.survei', ['kunjungan' => $kunjungan, 'sudahIsi' => true]);
-        }
-
-        // Validasi: max 7 hari setelah checkout
-        if ($kunjungan->presensi->waktu_keluar->diffInDays(now()) > 7) {
-            return view('public.survei', ['kunjungan' => $kunjungan, 'kadaluarsa' => true]);
-        }
-
-        return view('public.survei', compact('kunjungan'));
+        // Kirim semua variabel ke view — view yang bertanggung jawab menampilkan pesan yang sesuai
+        return view('public.survei', [
+            'kunjungan'     => $kunjungan,
+            'belumCheckout' => $status === 'belum_checkout', // Flag untuk menampilkan pesan "belum selesai"
+            'sudahIsi'      => $status === 'sudah_isi',      // Flag untuk menampilkan pesan "sudah diisi"
+            'kadaluarsa'    => $status === 'kadaluarsa',     // Flag untuk menampilkan pesan "link kadaluarsa"
+        ]);
     }
 
-    /** Simpan survei */
-    public function store(Request $request, $nomorRegistrasi)
+    /**
+     * Menyimpan data survei kepuasan yang diisi pemohon.
+     *
+     * Validasi format data ditangani oleh StoreSurveiRequest.
+     * Validasi akses (sudah checkout, belum isi, tidak kadaluarsa) ditangani oleh SurveiService.
+     *
+     * @param  StoreSurveiRequest $request Request yang sudah tervalidasi
+     * @param  string             $nomor   Nomor registrasi kunjungan
+     * @return RedirectResponse
+     */
+    public function store(StoreSurveiRequest $request, string $nomor): RedirectResponse
     {
-        $kunjungan = Kunjungan::with(['presensi', 'survei'])
-            ->where('nomor_registrasi', $nomorRegistrasi)
-            ->firstOrFail();
+        // Delegasikan penyimpanan survei ke service (termasuk defense-in-depth validation)
+        $result = $this->surveiService->simpanSurvei($nomor, $request->validated());
 
-        if (!$kunjungan->presensi?->waktu_keluar || $kunjungan->survei) {
-            return back()->with('error', 'Survei tidak dapat diisi saat ini.');
+        if (! $result['success']) {
+            // Jika service menolak (bypass form terdeteksi), tampilkan error
+            return back()->with('error', $result['message']);
         }
 
-        $request->validate([
-            'rating_pelayanan' => 'required|integer|min:1|max:5',
-            'rating_fasilitas' => 'required|integer|min:1|max:5',
-            'rating_informasi' => 'required|integer|min:1|max:5',
-            'komentar'         => 'nullable|string|max:1000',
-            'saran'            => 'nullable|string|max:1000',
-        ], [
-            'rating_pelayanan.required' => 'Rating pelayanan wajib diisi.',
-            'rating_fasilitas.required' => 'Rating fasilitas wajib diisi.',
-            'rating_informasi.required' => 'Rating informasi wajib diisi.',
-        ]);
-
-        SurveiKepuasan::create([
-            'kunjungan_id'     => $kunjungan->id,
-            'rating_pelayanan' => $request->rating_pelayanan,
-            'rating_fasilitas' => $request->rating_fasilitas,
-            'rating_informasi' => $request->rating_informasi,
-            'komentar'         => $request->komentar,
-            'saran'            => $request->saran,
-            'tampilkan_publik' => true,
-        ]);
-
-        return redirect()->route('survei.terima-kasih', $nomorRegistrasi);
+        // Redirect ke halaman terima kasih setelah survei berhasil disimpan
+        return redirect()->route('survei.terima-kasih', $nomor);
     }
 
-    /** Terima kasih setelah survei */
-    public function terimaKasih($nomorRegistrasi)
+    /**
+     * Menampilkan halaman terima kasih setelah survei berhasil diisi.
+     *
+     * @param  string $nomor Nomor registrasi kunjungan
+     * @return View
+     */
+    public function terimaKasih(string $nomor): View
     {
-        $kunjungan = Kunjungan::with(['sekolah', 'kontak', 'survei'])->where('nomor_registrasi', $nomorRegistrasi)->firstOrFail();
+        // Ambil kunjungan untuk menampilkan informasi di halaman konfirmasi
+        $kunjungan = Kunjungan::with(['sekolah', 'kontak', 'survei'])
+            ->where('nomor_registrasi', $nomor)
+            ->firstOrFail();
+
         return view('public.survei-terima-kasih', compact('kunjungan'));
     }
 }

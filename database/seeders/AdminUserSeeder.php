@@ -14,7 +14,7 @@ class AdminUserSeeder extends Seeder
         User::updateOrCreate(
             ['email' => env('ADMIN_EMAIL', 'admin@upi.edu')],
             [
-                'name'     => 'Admin Humas UPI',
+                'name'     => 'Admin KKIPP UPI',
                 'email'    => env('ADMIN_EMAIL', 'admin@upi.edu'),
                 'password' => Hash::make(env('ADMIN_PASSWORD', 'admin123')),
                 'role'     => 'admin',

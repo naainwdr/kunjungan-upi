@@ -5,155 +5,187 @@ namespace App\Http\Controllers\Petugas;
 use App\Http\Controllers\Controller;
 use App\Models\Kunjungan;
 use App\Models\KunjunganPresensi;
+use App\Services\PresensiService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
+/**
+ * Controller untuk manajemen presensi kunjungan di panel Petugas Presensi.
+ *
+ * Petugas Presensi adalah role operasional yang bertugas melakukan scan QR
+ * dan mencatat check-in/check-out kunjungan. Controller ini IDENTIK dalam
+ * fungsionalitas dengan Admin\PresensiController, namun menggunakan:
+ * - View berbeda (petugas.* bukan admin.*)
+ * - Route redirect berbeda (petugas.scanner bukan admin.kunjungan.show)
+ *
+ * Dengan menggunakan PresensiService yang shared, tidak ada duplikasi
+ * business logic antara admin dan petugas.
+ */
 class PetugasPresensiController extends Controller
 {
-    /** Halaman Scanner QR */
-    public function scanner()
+    /**
+     * Inisialisasi controller dengan dependency injection PresensiService.
+     *
+     * Menggunakan service yang sama dengan Admin\PresensiController
+     * untuk menjamin konsistensi behavior.
+     *
+     * @param  PresensiService $presensiService Service shared untuk logika presensi
+     */
+    public function __construct(
+        private readonly PresensiService $presensiService,
+    ) {}
+
+    /**
+     * Menampilkan halaman scanner QR untuk Petugas Presensi.
+     *
+     * @return View
+     */
+    public function scanner(): View
     {
+        // Petugas menggunakan view khusus petugas (desain lebih sederhana, fokus scan)
         return view('petugas.scanner');
     }
 
-    /** API: cari kunjungan by nomor_registrasi (dari QR scan) */
-    public function lookup(Request $request)
+    /**
+     * API endpoint: mencari data kunjungan berdasarkan kode QR yang di-scan.
+     *
+     * Dipanggil via AJAX dari JavaScript pada halaman scanner petugas.
+     * Menggunakan service yang sama dengan admin — data yang dikembalikan identik.
+     *
+     * @param  Request $request HTTP request berisi parameter 'kode' (nomor registrasi)
+     * @return JsonResponse
+     */
+    public function lookup(Request $request): JsonResponse
     {
+        // Bersihkan input untuk menghindari whitespace yang mungkin tertangkap scanner
         $kode = trim($request->input('kode', ''));
 
-        if (!$kode) {
-            return response()->json(['error' => 'Kode tidak boleh kosong.'], 422);
+        // Delegasikan ke PresensiService yang sama dengan admin — behavior konsisten
+        $result = $this->presensiService->lookup($kode);
+
+        if (! $result['success']) {
+            return response()->json(['error' => $result['error']], $result['httpCode']);
         }
 
-        $kunjungan = Kunjungan::with(['sekolah', 'kontak', 'sesi', 'tempat', 'presensi'])
-            ->where('nomor_registrasi', $kode)
-            ->first();
-
-        if (!$kunjungan) {
-            return response()->json(['error' => 'Kunjungan tidak ditemukan untuk kode: ' . $kode], 404);
-        }
-
-        if ($kunjungan->status !== 'approved') {
-            return response()->json([
-                'error' => "Kunjungan ini berstatus '{$kunjungan->status_label}', bukan Disetujui."
-            ], 422);
-        }
-
-        $presensi = $kunjungan->presensi;
-
-        return response()->json([
-            'id'                => $kunjungan->id,
-            'nomor_registrasi'  => $kunjungan->nomor_registrasi,
-            'nama_sekolah'      => $kunjungan->sekolah->nama,
-            'tanggal'           => $kunjungan->tanggal_format,
-            'sesi'              => $kunjungan->sesi->label ?? '-',
-            'tempat'            => $kunjungan->tempat->nama ?? '-',
-            'jumlah_peserta'    => $kunjungan->jumlah_peserta,
-            'kontak_nama'       => $kunjungan->kontak->nama,
-            'kontak_telepon'    => $kunjungan->kontak->telepon,
-            'presensi_status'   => $presensi?->status ?? 'belum',
-            'waktu_masuk'       => $presensi?->waktu_masuk?->format('H:i:s'),
-            'waktu_keluar'      => $presensi?->waktu_keluar?->format('H:i:s'),
-            'durasi'            => $presensi?->durasi,
-        ]);
+        return response()->json($result['data']);
     }
 
-    /** Check-In */
-    public function checkIn(Request $request, Kunjungan $kunjungan)
+    /**
+     * Melakukan check-in kunjungan (oleh Petugas).
+     *
+     * @param  Request   $request   HTTP request
+     * @param  Kunjungan $kunjungan Instance kunjungan dari route model binding
+     * @return JsonResponse|RedirectResponse
+     */
+    public function checkIn(Request $request, Kunjungan $kunjungan): JsonResponse|RedirectResponse
     {
-        if ($kunjungan->status !== 'approved') {
-            return $this->errorResponse($request, 'Hanya kunjungan berstatus Disetujui yang dapat check-in.');
+        // Delegasikan ke shared service — logika bisnis identik dengan admin
+        $result = $this->presensiService->checkIn($kunjungan, auth()->id());
+
+        if (! $result['success']) {
+            return $this->errorResponse($request, $result['message']);
         }
 
-        $presensi = $kunjungan->presensi;
-
-        if ($presensi?->waktu_masuk) {
-            return $this->errorResponse($request, 'Check-in sudah tercatat pada ' . $presensi->waktu_masuk->format('H:i:s') . '.');
-        }
-
-        KunjunganPresensi::updateOrCreate(
-            ['kunjungan_id' => $kunjungan->id],
-            [
-                'waktu_masuk'      => now(),
-                'petugas_masuk_id' => auth()->id(),
-            ]
-        );
-
-        $msg = "Check-in berhasil untuk {$kunjungan->sekolah->nama} pada " . now()->format('H:i:s') . '.';
-        return $this->successResponse($request, $msg, $kunjungan);
+        return $this->successResponse($request, $result['message']);
     }
 
-    /** Check-Out */
-    public function checkOut(Request $request, Kunjungan $kunjungan)
+    /**
+     * Melakukan check-out kunjungan (oleh Petugas).
+     *
+     * Setelah check-out: status kunjungan → completed, email survei terkirim.
+     * Semua proses ini ditangani oleh PresensiService.
+     *
+     * @param  Request   $request   HTTP request
+     * @param  Kunjungan $kunjungan Instance kunjungan dari route model binding
+     * @return JsonResponse|RedirectResponse
+     */
+    public function checkOut(Request $request, Kunjungan $kunjungan): JsonResponse|RedirectResponse
     {
-        $presensi = $kunjungan->presensi;
+        // Delegasikan ke shared service — behavior sama persis dengan admin checkout
+        $result = $this->presensiService->checkOut($kunjungan, auth()->id());
 
-        if (!$presensi?->waktu_masuk) {
-            return $this->errorResponse($request, 'Check-in belum dilakukan.');
+        if (! $result['success']) {
+            return $this->errorResponse($request, $result['message']);
         }
 
-        if ($presensi->waktu_keluar) {
-            return $this->errorResponse($request, 'Check-out sudah tercatat pada ' . $presensi->waktu_keluar->format('H:i:s') . '.');
-        }
-
-        $presensi->update([
-            'waktu_keluar'      => now(),
-            'petugas_keluar_id' => auth()->id(),
-        ]);
-
-        // Update kunjungan status to completed
-        if ($kunjungan->status !== 'completed') {
-            $kunjungan->logStatus('completed', 'Auto-completed upon check-out', auth()->id());
-            $kunjungan->update(['status' => 'completed']);
-        }
-
-        // Kirim link evaluasi ke kontak
-        try {
-            \Mail::to($kunjungan->kontak->email)->send(
-                new \App\Mail\EvaluasiKunjunganMail($kunjungan)
-            );
-        } catch (\Exception $e) {
-            \Log::warning('Gagal kirim email survei: ' . $e->getMessage());
-        }
-
-        $msg = "Check-out berhasil. Durasi kunjungan: {$presensi->fresh()->durasi}. Kunjungan diselesaikan dan link survei dikirim ke {$kunjungan->kontak->email}.";
-        return $this->successResponse($request, $msg, $kunjungan);
+        return $this->successResponse($request, $result['message']);
     }
 
-    /** Halaman Rekap Presensi */
-    public function index(Request $request)
+    /**
+     * Menampilkan rekap presensi hari ini dan historis (untuk Petugas).
+     *
+     * @param  Request $request HTTP request berisi parameter filter
+     * @return View
+     */
+    public function index(Request $request): View
     {
+        // Query presensi dengan semua relasi yang diperlukan untuk tampilan rekap
         $query = KunjunganPresensi::with(['kunjungan.sekolah', 'kunjungan.sesi', 'kunjungan.tempat', 'petugasMasuk', 'petugasKeluar'])
             ->orderByDesc('updated_at');
 
+        // Filter berdasarkan status presensi (sama dengan admin, kode identik)
         $filter = $request->input('filter', 'all');
-        if ($filter === 'masuk')  $query->whereNotNull('waktu_masuk')->whereNull('waktu_keluar');
-        if ($filter === 'keluar') $query->whereNotNull('waktu_keluar');
-        if ($filter === 'belum')  $query->whereNull('waktu_masuk');
+        if ($filter === 'masuk') {
+            $query->whereNotNull('waktu_masuk')->whereNull('waktu_keluar');
+        }
+        if ($filter === 'keluar') {
+            $query->whereNotNull('waktu_keluar');
+        }
+        if ($filter === 'belum') {
+            $query->whereNull('waktu_masuk');
+        }
 
+        // Filter berdasarkan tanggal check-in
         if ($request->filled('tgl')) {
             $query->whereDate('waktu_masuk', $request->tgl);
         }
 
         $presensi = $query->paginate(20)->withQueryString();
 
+        // Hitung jumlah per status untuk badge filter
         $counts = [
             'all'    => KunjunganPresensi::count(),
             'masuk'  => KunjunganPresensi::whereNotNull('waktu_masuk')->whereNull('waktu_keluar')->count(),
             'keluar' => KunjunganPresensi::whereNotNull('waktu_keluar')->count(),
         ];
 
+        // Gunakan view khusus petugas
         return view('petugas.presensi', compact('presensi', 'filter', 'counts'));
     }
 
-    private function successResponse(Request $request, string $msg, Kunjungan $kunjungan)
+    // ─────────────────────────────────────────────────────────
+    // Private Helpers — Response Format
+    // ─────────────────────────────────────────────────────────
+
+    /**
+     * Mengembalikan response sukses sesuai jenis request (JSON atau redirect).
+     *
+     * Perbedaan dengan Admin: redirect ke petugas.scanner (bukan admin.kunjungan.show)
+     * karena petugas tidak bisa mengakses halaman detail kunjungan.
+     *
+     * @param  Request $request HTTP request
+     * @param  string  $msg     Pesan sukses
+     * @return JsonResponse|RedirectResponse
+     */
+    private function successResponse(Request $request, string $msg): JsonResponse|RedirectResponse
     {
         if ($request->expectsJson()) {
             return response()->json(['success' => $msg]);
         }
+        // Redirect ke halaman scanner (bukan detail kunjungan — petugas tidak punya akses)
         return redirect()->route('petugas.scanner')->with('success', $msg);
     }
 
-    private function errorResponse(Request $request, string $msg)
+    /**
+     * Mengembalikan response error sesuai jenis request.
+     *
+     * @param  Request $request HTTP request
+     * @param  string  $msg     Pesan error
+     * @return JsonResponse|RedirectResponse
+     */
+    private function errorResponse(Request $request, string $msg): JsonResponse|RedirectResponse
     {
         if ($request->expectsJson()) {
             return response()->json(['error' => $msg], 422);

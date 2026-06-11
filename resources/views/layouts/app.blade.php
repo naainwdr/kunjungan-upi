@@ -64,7 +64,30 @@
 
         /* Mobile nav animation */
         #mobile-nav { transition: max-height 0.3s ease, opacity 0.25s ease; max-height: 0; opacity: 0; overflow: hidden; }
-        #mobile-nav.open { max-height: 300px; opacity: 1; }
+        #mobile-nav.open { max-height: 360px; opacity: 1; }
+
+        /* About modal */
+        #about-modal {
+            display: none;
+            position: fixed; inset: 0; z-index: 9999;
+            align-items: center; justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        #about-modal.open { display: flex; }
+        #about-modal-backdrop {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(4px);
+        }
+        #about-modal-box {
+            position: relative; z-index: 1;
+            background: #fff;
+            border-radius: 1.25rem;
+            padding: 2rem 2rem 1.75rem;
+            max-width: 400px; width: 90%;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+            animation: fadeIn 0.25s ease;
+        }
     </style>
     @stack('head')
     @stack('styles')
@@ -79,11 +102,6 @@
         {{-- Content × 2 for seamless infinite loop --}}
         @foreach(range(0, 1) as $r)
         <span class="flex-shrink-0 flex items-center gap-6">
-            <span class="flex items-center gap-1.5 text-upi-gold font-semibold">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                (022) 2013163
-            </span>
-            <span>|</span>
             <span class="flex items-center gap-1.5">
                 <svg class="w-3 h-3 text-upi-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                 laporan-ult.upi.edu/lapor
@@ -149,6 +167,18 @@
                        class="text-gray-600 text-sm px-3 py-1.5 rounded-lg hover:bg-upi-red hover:text-white transition-colors {{ request()->routeIs('cek-status*') ? 'bg-upi-red text-white font-semibold' : '' }}">
                         Cek Status
                     </a>
+
+                    {{-- Tombol About / Info Aplikasi --}}
+                    <button id="btn-about"
+                            onclick="openAboutModal()"
+                            title="Tentang Aplikasi"
+                            aria-label="Tentang Aplikasi"
+                            class="ml-1 w-8 h-8 flex items-center justify-center rounded-full border-2 border-upi-red text-upi-red hover:bg-upi-red hover:text-white transition-all duration-200 hover:scale-110 active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </button>
                 </div>
 
                 {{-- Mobile Hamburger --}}
@@ -192,6 +222,15 @@
                    class="text-gray-700 text-sm py-2.5 px-3 rounded-lg hover:bg-upi-red hover:text-white transition-colors {{ request()->routeIs('cek-status*') ? 'bg-upi-red text-white font-semibold' : '' }}">
                     🔍 Cek Status Pengajuan
                 </a>
+                {{-- Tombol About di mobile nav --}}
+                <button onclick="openAboutModal()"
+                        class="text-left text-gray-700 text-sm py-2.5 px-3 rounded-lg hover:bg-upi-red hover:text-white transition-colors w-full flex items-center gap-2">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Tentang Aplikasi
+                </button>
             </div>
         </div>
     </div>
@@ -252,10 +291,6 @@
                     Kontak
                 </h4>
                 <div class="space-y-2.5">
-                    <a href="tel:0222013163" class="flex items-center gap-2.5 text-gray-400 hover:text-white transition-colors text-xs group">
-                        <span class="w-7 h-7 bg-gray-800 group-hover:bg-upi-red rounded-lg flex items-center justify-center transition-colors flex-shrink-0">📞</span>
-                        (022) 2013163
-                    </a>
                     <a href="https://wa.me/6285133332559" target="_blank" class="flex items-center gap-2.5 text-gray-400 hover:text-white transition-colors text-xs group">
                         <span class="w-7 h-7 bg-gray-800 group-hover:bg-green-600 rounded-lg flex items-center justify-center transition-colors flex-shrink-0">📲</span>
                         085133332559 (WA)
@@ -338,13 +373,92 @@
             <p class="text-gray-600 text-xs text-center sm:text-left">
                 &copy; {{ date('Y') }} <span class="text-gray-400 font-medium">KKIPP — Universitas Pendidikan Indonesia.</span> All rights reserved.
             </p>
-            <a href="{{ route('admin.login') }}"
-               class="text-gray-700 hover:text-gray-400 text-xs transition-colors px-3 py-1 border border-gray-800 rounded-lg hover:border-gray-600">
-                🔐 Admin Panel
-            </a>
         </div>
     </div>
 </footer>
+
+{{-- ══════════════════════════════════════════════
+     ABOUT MODAL — Info Pengembang & Pengarah
+     ══════════════════════════════════════════════ --}}
+<div id="about-modal" role="dialog" aria-modal="true" aria-labelledby="about-modal-title">
+    <div id="about-modal-backdrop" onclick="closeAboutModal()"></div>
+    <div id="about-modal-box">
+        {{-- Header --}}
+        <div class="flex items-start justify-between mb-5">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-upi-red/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-upi-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 id="about-modal-title" class="text-gray-900 font-bold text-base leading-tight">Tentang Aplikasi</h2>
+                    <p class="text-gray-400 text-xs mt-0.5">Sistem Permohonan Kunjungan Sekolah</p>
+                </div>
+            </div>
+            <button onclick="closeAboutModal()"
+                    aria-label="Tutup"
+                    class="text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg p-1.5 transition-colors ml-2 flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        {{-- Divider --}}
+        <div class="h-px bg-gradient-to-r from-upi-red/30 via-upi-gold/40 to-transparent mb-5"></div>
+
+        {{-- Pengembang --}}
+        <div class="mb-5">
+            <p class="text-[10px] font-bold text-upi-red uppercase tracking-widest mb-2">Pengembang Aplikasi</p>
+            <div class="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3">
+                <div class="w-9 h-9 bg-upi-red rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">N</div>
+                <div>
+                    <p class="text-gray-800 font-semibold text-sm leading-tight">Nina Wulandari</p>
+                    <p class="text-gray-400 text-xs mt-0.5">Pengembang Sistem</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Pengarah --}}
+        <div class="mb-6">
+            <p class="text-[10px] font-bold text-upi-red uppercase tracking-widest mb-2">Pengarah</p>
+            <div class="space-y-2">
+                <div class="flex items-start gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors">
+                    <div class="w-7 h-7 bg-upi-red/10 rounded-full flex items-center justify-center text-upi-red font-bold text-xs flex-shrink-0 mt-0.5">V</div>
+                    <div>
+                        <p class="text-gray-800 font-medium text-sm leading-tight">Vidi Sukmayadi, S.S., M.Si., Ph.D.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors">
+                    <div class="w-7 h-7 bg-upi-red/10 rounded-full flex items-center justify-center text-upi-red font-bold text-xs flex-shrink-0 mt-0.5">A</div>
+                    <div>
+                        <p class="text-gray-800 font-medium text-sm leading-tight">Dr. Angga Hadipurwa, S.Pd., M.I.Kom.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors">
+                    <div class="w-7 h-7 bg-upi-red/10 rounded-full flex items-center justify-center text-upi-red font-bold text-xs flex-shrink-0 mt-0.5">J</div>
+                    <div>
+                        <p class="text-gray-800 font-medium text-sm leading-tight">Jaka Falah, S.S., M.Pd.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Footer modal --}}
+        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+            <div class="flex items-center gap-2">
+                <img src="/images/kkipp-logo.png" alt="KKIPP UPI" class="h-7 w-auto object-contain opacity-70">
+                <span class="text-gray-400 text-xs">KKIPP UPI &copy; {{ date('Y') }}</span>
+            </div>
+            <button onclick="closeAboutModal()"
+                    class="text-xs text-white bg-upi-red hover:bg-upi-dark px-4 py-1.5 rounded-lg transition-colors font-medium">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>
 
 @stack('scripts')
 <script>
@@ -361,6 +475,24 @@ mobileNavBtn.addEventListener('click', () => {
     iconHamburger.classList.toggle('hidden', navOpen);
     iconCloseNav.classList.toggle('hidden', !navOpen);
     mobileNavBtn.setAttribute('aria-expanded', String(navOpen));
+});
+
+// ── About Modal ──────────────────────────────────────────
+function openAboutModal() {
+    const modal = document.getElementById('about-modal');
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden'; // Cegah scroll body saat modal terbuka
+}
+
+function closeAboutModal() {
+    const modal = document.getElementById('about-modal');
+    modal.classList.remove('open');
+    document.body.style.overflow = ''; // Kembalikan scroll
+}
+
+// Tutup modal dengan tombol Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAboutModal();
 });
 </script>
 </body>
