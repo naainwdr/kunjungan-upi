@@ -4,20 +4,20 @@
 @section('content')
 <div class="max-w-2xl mx-auto px-4 py-10">
 
-    @if(isset($belumCheckout))
+    @if($belumCheckout)
     <div class="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center shadow-sm">
         <div class="text-4xl mb-3">⏳</div>
         <h1 class="text-xl font-bold text-amber-800 mb-2">Belum Check-Out</h1>
         <p class="text-amber-700 text-sm">Survei hanya dapat diisi setelah kunjungan selesai (check-out).</p>
     </div>
-    @elseif(isset($sudahIsi))
+    @elseif($sudahIsi)
     <div class="bg-green-50 border border-green-200 rounded-2xl p-8 text-center shadow-sm">
         <div class="text-4xl mb-3">✅</div>
         <h1 class="text-xl font-bold text-green-800 mb-2">Survei Sudah Diisi</h1>
         <p class="text-green-700 text-sm">Terima kasih! Anda sudah mengisi survei kepuasan untuk kunjungan ini.</p>
         <p class="text-green-600 text-xs mt-3">Rating rata-rata Anda: <strong>{{ $kunjungan->survei->rating_rata }}★</strong></p>
     </div>
-    @elseif(isset($kadaluarsa))
+    @elseif($kadaluarsa)
     <div class="bg-red-50 border border-red-200 rounded-2xl p-8 text-center shadow-sm">
         <div class="text-4xl mb-3">⌛</div>
         <h1 class="text-xl font-bold text-red-800 mb-2">Link Survei Kadaluarsa</h1>

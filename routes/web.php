@@ -29,15 +29,16 @@ Route::post('/cek-status', [KunjunganController::class, 'cariStatus'])->name('ce
 Route::post('/reservasi/{id}/batal', [KunjunganController::class, 'batal'])->name('reservasi.batal');
 Route::get('/api/booked-sesi', [KunjunganController::class, 'bookedSesi'])->name('api.booked-sesi');
 
-// Evaluasi
-Route::get('/evaluasi/{id}', [KunjunganController::class, 'evaluasiForm'])->name('evaluasi.form');
-Route::post('/evaluasi/{id}', [KunjunganController::class, 'simpanEvaluasi'])->name('evaluasi.simpan');
-Route::get('/evaluasi/{id}/terima-kasih', [KunjunganController::class, 'terimaKasih'])->name('evaluasi.terima-kasih');
 
 // Tiket Digital
 Route::get('/tiket/{nomor}', function($nomor) {
     $kunjungan = \App\Models\Kunjungan::with(['sekolah','kontak','sesi','tempat','presensi'])
         ->where('nomor_registrasi', $nomor)->firstOrFail();
+        
+    if (!in_array($kunjungan->status, ['approved', 'completed'])) {
+        abort(403, 'Akses Ditolak: Tiket belum tersedia karena permohonan Anda belum disetujui.');
+    }
+    
     return view('public.tiket', compact('kunjungan'));
 })->name('tiket.show');
 

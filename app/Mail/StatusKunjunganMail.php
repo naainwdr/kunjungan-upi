@@ -20,10 +20,11 @@ class StatusKunjunganMail extends Mailable
     public function envelope(): Envelope
     {
         $subject = match ($this->kunjungan->status) {
-            'pending'  => '[UPI] Konfirmasi Pengajuan Kunjungan',
-            'approved' => '[UPI] Pengajuan Kunjungan Anda Disetujui 🎉',
-            'rejected' => '[UPI] Pengajuan Kunjungan Anda Tidak Dapat Diproses',
-            default    => '[UPI] Informasi Status Kunjungan',
+            'pending'   => '[UPI] Konfirmasi Pengajuan Kunjungan',
+            'approved'  => '[UPI] Pengajuan Kunjungan Anda Disetujui 🎉',
+            'rejected'  => '[UPI] Pengajuan Kunjungan Anda Tidak Dapat Diproses',
+            'cancelled' => '[UPI] Pembatalan Kunjungan Berhasil',
+            default     => '[UPI] Informasi Status Kunjungan',
         };
 
         return new Envelope(subject: $subject);

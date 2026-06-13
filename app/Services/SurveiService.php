@@ -50,8 +50,8 @@ class SurveiService
             ->where('nomor_registrasi', $nomorRegistrasi)
             ->firstOrFail(); // Lempar 404 jika tidak ada
 
-        // Cek 1: Kunjungan harus sudah check-out agar survei bisa diisi
-        if (! $kunjungan->presensi?->waktu_keluar) {
+        // Cek 1: Kunjungan harus sudah berstatus 'completed' (Selesai)
+        if ($kunjungan->status !== 'completed') {
             return ['kunjungan' => $kunjungan, 'status' => 'belum_checkout'];
         }
 
@@ -60,8 +60,9 @@ class SurveiService
             return ['kunjungan' => $kunjungan, 'status' => 'sudah_isi'];
         }
 
-        // Cek 3: Survei hanya bisa diisi dalam BATAS_HARI_SURVEI hari setelah check-out
-        $selisihHari = $kunjungan->presensi->waktu_keluar->diffInDays(now());
+        // Cek 3: Survei hanya bisa diisi dalam BATAS_HARI_SURVEI hari setelah kunjungan selesai
+        $waktuSelesai = $kunjungan->presensi?->waktu_keluar ?? $kunjungan->updated_at;
+        $selisihHari = $waktuSelesai->diffInDays(now());
         if ($selisihHari > self::BATAS_HARI_SURVEI) {
             return ['kunjungan' => $kunjungan, 'status' => 'kadaluarsa'];
         }
@@ -91,7 +92,7 @@ class SurveiService
 
         // Defense in depth: validasi ulang kondisi pengisian survei
         // Mencegah bypass form melalui direct HTTP POST
-        if (! $kunjungan->presensi?->waktu_keluar || $kunjungan->survei) {
+        if ($kunjungan->status !== 'completed' || $kunjungan->survei) {
             return [
                 'success'   => false,
                 'kunjungan' => null,
@@ -117,54 +118,4 @@ class SurveiService
         ];
     }
 
-    /**
-     * Memvalidasi apakah form evaluasi (legacy) dapat diakses.
-     *
-     * Evaluasi berbeda dengan survei: evaluasi disimpan ke kolom catatan_admin
-     * di tabel kunjungan. Validasi berdasarkan updated_at kunjungan (bukan waktu checkout).
-     *
-     * @param  Kunjungan $kunjungan Instance kunjungan yang akan dievaluasi
-     * @return bool True jika form evaluasi masih bisa diakses
-     */
-    public function isEvaluasiValid(Kunjungan $kunjungan): bool
-    {
-        // Form evaluasi hanya untuk kunjungan yang sudah selesai
-        if ($kunjungan->status !== 'completed') {
-            return false;
-        }
-
-        // Batasi akses hanya dalam BATAS_HARI_EVALUASI hari setelah kunjungan selesai
-        if ($kunjungan->updated_at->diffInDays(now()) > self::BATAS_HARI_EVALUASI) {
-            return false;
-        }
-
-        return true; // Form masih dapat diakses
-    }
-
-    /**
-     * Menyimpan data evaluasi ke kolom catatan_admin (legacy).
-     *
-     * CATATAN ARSITEKTUR: Ini adalah implementasi lama yang menyimpan data evaluasi
-     * pemohon ke kolom yang seharusnya untuk catatan internal admin. Dipertahankan
-     * untuk backward compatibility. Disarankan untuk migrasi ke SurveiKepuasan.
-     *
-     * @param  Kunjungan            $kunjungan Instance kunjungan yang akan dievaluasi
-     * @param  array<string, mixed> $data      Data evaluasi yang sudah divalidasi
-     * @return void
-     */
-    public function simpanEvaluasi(Kunjungan $kunjungan, array $data): void
-    {
-        // Simpan data evaluasi sebagai JSON di kolom catatan_admin
-        // Ini adalah trade-off: tidak perlu migrasi, tapi mencampur konteks data
-        $kunjungan->update([
-            'catatan_admin' => json_encode([
-                'rating_pelayanan' => $data['rating_pelayanan'],
-                'rating_fasilitas' => $data['rating_fasilitas'],
-                'rating_informasi' => $data['rating_informasi'],
-                'komentar'         => $data['komentar'] ?? null,
-                'saran'            => $data['saran'] ?? null,
-                'disimpan_pada'    => now()->toISOString(), // Timestamp pengisian untuk audit
-            ]),
-        ]);
-    }
 }

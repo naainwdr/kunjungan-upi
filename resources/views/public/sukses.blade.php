@@ -89,10 +89,7 @@
         </p>
 
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="{{ route('tiket.show', $kunjungan->nomor_registrasi) }}" target="_blank" id="btn-lihat-tiket"
-                class="bg-[#800000] text-white px-6 py-2.5 rounded-lg font-semibold text-sm hover:bg-[#600000] transition-colors flex items-center justify-center gap-2">
-                🎫 Lihat &amp; Print Tiket
-            </a>
+
             <a href="{{ route('cek-status') }}?query={{ $kunjungan->nomor_registrasi }}" id="btn-cek-ulang"
                 class="border border-gray-300 text-gray-600 px-6 py-2.5 rounded-lg font-semibold text-sm hover:bg-gray-50 transition-colors">
                 🔍 Cek Status

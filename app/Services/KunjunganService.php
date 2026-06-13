@@ -171,6 +171,18 @@ class KunjunganService
         // Update status di database
         $kunjungan->update(['status' => 'cancelled']);
 
+        // Kirim notifikasi email pembatalan ke PIC
+        try {
+            \Illuminate\Support\Facades\Mail::to($kunjungan->kontak->email)->send(new \App\Mail\StatusKunjunganMail($kunjungan));
+            $kunjungan->update(['email_notified_at' => now()]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('[KunjunganService] Gagal kirim email pembatalan', [
+                'nomor_registrasi' => $kunjungan->nomor_registrasi,
+                'email'            => $kunjungan->kontak->email ?? 'N/A',
+                'error'            => $e->getMessage(),
+            ]);
+        }
+
         return [
             'success'   => true,
             'message'   => 'Permohonan kunjungan berhasil dibatalkan.',

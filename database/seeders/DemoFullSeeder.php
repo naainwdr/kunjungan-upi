@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class DemoFullSeeder extends Seeder
 {
@@ -15,35 +16,58 @@ class DemoFullSeeder extends Seeder
         // ─────────────────────────────────────────────────
         $tempat = DB::table('tempat')->pluck('id', 'nama');
         $sesi   = DB::table('sesi')->pluck('id', 'nama');
-        $admin  = DB::table('users')->value('id'); // pakai admin pertama
+        $admin  = DB::table('users')->where('role', 'admin')->value('id');
+
+        $tempatIds = array_values($tempat->toArray());
+        $sesiIds   = array_values($sesi->toArray());
+
+        if (empty($tempatIds) || empty($sesiIds)) {
+            $this->command->error('Tabel tempat atau sesi kosong. Harap run TempathSesiSeeder terlebih dahulu.');
+            return;
+        }
 
         // ─────────────────────────────────────────────────
-        // 1. Sekolah + Kontak
+        // 1. Sekolah + Kontak (Buat 20 Sekolah Dummy)
         // ─────────────────────────────────────────────────
         $sekolahData = [
-            // [Nama, NPSN, Alamat, Email Sekolah, Telp Sekolah, PIC Nama, PIC Telp, PIC Email]
-            ['SMAN 1 Bandung',        '20219121', 'Jl. Ir. H. Juanda No.93, Bandung',          'info@sman1bdg.sch.id',   '022-1111111', 'Drs. Ahmad Fauzi, M.Pd',   '081211110001', 'pic.sman1bdg@gmail.com'],
-            ['SMAN 3 Cimahi',         '20228131', 'Jl. Pasantren No.161, Cimahi',              'info@sman3cmi.sch.id',   '022-1111112', 'Hj. Sri Wahyuni, S.Pd',    '081211110002', 'pic.sman3cmi@gmail.com'],
-            ['SMK Negeri 2 Garut',    '20227181', 'Jl. Suherman No.90, Garut',                 'info@smkn2grt.sch.id',   '0262-1111113', 'Budi Santoso, M.T',        '081211110003', 'pic.smkn2grt@gmail.com'],
-            ['SMAN 5 Bekasi',         '20222711', 'Jl. Jend. Ahmad Yani No.54, Bekasi',        'info@sman5bks.sch.id',   '021-1111114', 'Rina Kusumawati, S.Pd',    '081211110004', 'pic.sman5bks@gmail.com'],
-            ['MAN 1 Sumedang',        '20208351', 'Jl. Mayor Abdurachman No.12, Sumedang',     'info@man1smd.sch.id',    '0261-1111115', 'Ustad Jamaludin, M.Ag',    '081211110005', 'pic.man1smd@gmail.com'],
-            ['SMAN 7 Bogor',          '20220261', 'Jl. Palupuh No.1, Bogor',                   'info@sman7bgr.sch.id',   '0251-1111116', 'Dra. Nani Suryani',        '081211110006', 'pic.sman7bgr@gmail.com'],
-            ['SMP Negeri 1 Subang',   '20233481', 'Jl. Sudirman No.32, Subang',                'info@smpn1sbg.sch.id',   '0260-1111117', 'Hendra Gunawan, S.Pd',     '081211110007', 'pic.smpn1sbg@gmail.com'],
-            ['SMK Pasundan 1 Bandung','20219451', 'Jl. Balong Gede No.44, Bandung',            'info@smkpsd1.sch.id',    '022-1111118', 'Asep Hidayat, M.Pd',       '081211110008', 'pic.smkpsd1@gmail.com'],
-            ['SMAN 2 Purwakarta',     '20216061', 'Jl. Veteran No.7, Purwakarta',              'info@sman2pwk.sch.id',   '0264-1111119', 'Dewi Anggraeni, S.Pd',     '081211110009', 'pic.sman2pwk@gmail.com'],
-            ['SMA Muhammadiyah Tasik','20210211', 'Jl. Pasar Wetan No.28, Tasikmalaya',        'info@smamtsm.sch.id',    '0265-1111120', 'M. Rizki Firdaus, S.Pd',   '081211110010', 'pic.smamtsm@gmail.com'],
+            ['SMAN 1 Bandung', 'Drs. Ahmad Fauzi, M.Pd'],
+            ['SMAN 3 Cimahi', 'Hj. Sri Wahyuni, S.Pd'],
+            ['SMK Negeri 2 Garut', 'Budi Santoso, M.T'],
+            ['SMAN 5 Bekasi', 'Rina Kusumawati, S.Pd'],
+            ['MAN 1 Sumedang', 'Ustad Jamaludin, M.Ag'],
+            ['SMAN 7 Bogor', 'Dra. Nani Suryani'],
+            ['SMP Negeri 1 Subang', 'Hendra Gunawan, S.Pd'],
+            ['SMK Pasundan 1 Bandung', 'Asep Hidayat, M.Pd'],
+            ['SMAN 2 Purwakarta', 'Dewi Anggraeni, S.Pd'],
+            ['SMA Muhammadiyah Tasik', 'M. Rizki Firdaus, S.Pd'],
+            ['SMAN 1 Depok', 'Dr. Agus Suherman'],
+            ['SMKN 1 Sukabumi', 'Lilis Karlina, M.Si'],
+            ['SMPN 5 Cirebon', 'Dedi Mulyadi, S.Pd'],
+            ['SMAN 1 Indramayu', 'Tuti Herawati, M.Pd'],
+            ['SMAN 3 Karawang', 'Dr. Eko Prasetyo'],
+            ['MAN 2 Majalengka', 'H. Zainal Abidin'],
+            ['SMK BPK Penabur', 'Fransisca Wahyu'],
+            ['SMA Taruna Nusantara', 'Kolonel Inf. Surya'],
+            ['SMKN 4 Bandung', 'Tatang Suratang'],
+            ['SMAN 20 Bandung', 'Nining Ningsih, M.Pd'],
         ];
 
         $sekolahIds = [];
         $kontakIds  = [];
 
-        foreach ($sekolahData as $idx => [$nama, $npsn, $alamat, $email, $telp, $picNama, $picTelp, $picEmail]) {
+        foreach ($sekolahData as $idx => [$nama, $picNama]) {
+            // Nomor telepon acak yang realistis
+            $telpSekolah = '022-' . rand(1000000, 9999999);
+            $telpPic = '0812' . rand(10000000, 99999999);
+            // NPSN acak 8 digit unik
+            $npsn = '202' . str_pad($idx, 5, '0', STR_PAD_LEFT);
+
             $sid = DB::table('sekolah')->insertGetId([
                 'nama'       => $nama,
                 'npsn'       => $npsn,
-                'alamat'     => $alamat,
-                'email'      => 'ninawd27@gmail.com',
-                'telepon'    => $telp,
+                'alamat'     => 'Jl. Raya Pendidikan No. ' . rand(1, 100) . ', Jawa Barat',
+                'email'      => 'ninawd27@gmail.com', // SEMUA EMAIL MENGGUNAKAN NINAWD27 SESUAI REQUEST
+                'telepon'    => $telpSekolah,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -51,8 +75,8 @@ class DemoFullSeeder extends Seeder
             $kid = DB::table('kontak_sekolah')->insertGetId([
                 'sekolah_id' => $sid,
                 'nama'       => $picNama,
-                'telepon'    => $picTelp,
-                'email'      => 'ninawd27@gmail.com',
+                'telepon'    => $telpPic,
+                'email'      => 'ninawd27@gmail.com', // SEMUA EMAIL PIC MENGGUNAKAN NINAWD27 SESUAI REQUEST
                 'jabatan'    => 'guru',
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -63,166 +87,177 @@ class DemoFullSeeder extends Seeder
         }
 
         // ─────────────────────────────────────────────────
-        // 2. Kunjungan (beragam status & tanggal)
+        // Helper: Cari Tanggal Valid (Senin-Kamis)
         // ─────────────────────────────────────────────────
-        $tempatIds = array_values($tempat->toArray());
-        $sesiIds   = array_values($sesi->toArray());
+        // Menghindari hari libur (Jumat, Sabtu, Minggu)
+        $getValidWeekday = function($minDaysOffset, $maxDaysOffset) {
+            do {
+                $offset = rand($minDaysOffset, $maxDaysOffset);
+                $date = Carbon::today()->addDays($offset);
+            } while (!in_array($date->dayOfWeek, [1, 2, 3, 4])); // 1=Senin ... 4=Kamis
+            return $date->format('Y-m-d');
+        };
 
-        $kunjunganDefs = [
-            // [0-4] DATA MASA LALU (Untuk Grafik & Testimoni)
-            [0, 0, 0, -30, 'completed', 55, 4],
-            [1, 2, 1, -21, 'completed', 180, 8],
-            [2, 1, 0, -14, 'completed', 270, 12],
-            [3, 4, 1, -10, 'completed', 190, 9],
-            [4, 3, 0, -7,  'completed', 280, 11],
+        // ─────────────────────────────────────────────────
+        // 2. Kunjungan Massal (20 tiap status = 100 Kunjungan)
+        // ─────────────────────────────────────────────────
+        $kunjunganIds = [];
+        $counter = 1;
 
-            // [5] DEMO 1 (Hari Ini): Status Pending (Demo Admin Approval)
-            [5, 2, 1, 0, 'pending', 120, 6], 
-
-            // [6] DEMO 2 (Hari Ini): Status Approved, sudah check-in (Demo Check-Out Scanner)
-            [6, 0, 0, 0, 'approved', 45, 3], 
-
-            // [7] DEMO 3 (Besok): Status Approved, belum check-in
-            [7, 1, 1, 1, 'approved', 250, 10], 
-
-            // [8] DEMO 4 (Besok): Status Pending
-            [8, 4, 0, 1, 'pending', 180, 7],
-
-            // [9] Lusa (Offset 2 hari ke depan)
-            [9, 2, 1, 2, 'pending', 200, 8],
-            
-            // Kemungkinan lain bebas
-            [0, 3, 0, 14, 'pending', 290, 13],
-            [1, 0, 1, -5, 'rejected', 60, 3],
-            [2, 1, 0, -20, 'cancelled', 150, 7],
+        // Definisi Status dan Rentang Waktu
+        // 'completed' dan 'cancelled' -> Masa Lalu (Offset negatif)
+        // 'pending' dan 'approved' dan 'rejected' -> Masa Depan / Hari ini (Offset positif / 0)
+        
+        $statusConfigs = [
+            'completed' => ['count' => 20, 'min_day' => -60, 'max_day' => -1],
+            'approved'  => ['count' => 20, 'min_day' => 1,   'max_day' => 45],
+            'pending'   => ['count' => 20, 'min_day' => 5,   'max_day' => 60],
+            'rejected'  => ['count' => 20, 'min_day' => -10, 'max_day' => 20],
+            'cancelled' => ['count' => 20, 'min_day' => -30, 'max_day' => 10],
         ];
 
-        $kunjunganIds = [];
-        foreach ($kunjunganDefs as $i => [$si, $ti, $sei, $dayOffset, $status, $peserta, $guru]) {
-            $tgl     = Carbon::today()->addDays($dayOffset)->format('Y-m-d');
-            $prefix  = 'UPI-' . Carbon::parse($tgl)->format('Ymd') . '-';
-            $noReg   = $prefix . str_pad($i + 1, 4, '0', STR_PAD_LEFT);
+        foreach ($statusConfigs as $status => $config) {
+            for ($i = 0; $i < $config['count']; $i++) {
+                $tgl = $getValidWeekday($config['min_day'], $config['max_day']);
+                
+                $si = array_rand($sekolahIds); // Pilih sekolah acak
+                $ti = array_rand($tempatIds);  // Pilih tempat acak
+                $sei = array_rand($sesiIds);   // Pilih sesi acak
+                
+                $prefix  = 'UPI-' . Carbon::parse($tgl)->format('Ymd') . '-';
+                $noReg   = $prefix . str_pad($counter, 4, '0', STR_PAD_LEFT);
+                $counter++;
 
-            $id = DB::table('kunjungan')->insertGetId([
-                'nomor_registrasi'  => $noReg,
-                'sekolah_id'        => $sekolahIds[$si],
-                'kontak_id'         => $kontakIds[$si],
-                'tempat_id'         => $tempatIds[$ti],
-                'sesi_id'           => $sesiIds[$sei],
-                'tanggal_kunjungan' => $tgl,
-                'jumlah_peserta'    => $peserta,
-                'jumlah_kepsek'     => 1,
-                'jumlah_guru'       => $guru,
-                'jumlah_tendik'     => rand(1, 3),
-                'file_surat'        => null,
-                'status'            => $status,
-                'catatan_admin'     => $status === 'rejected'
-                    ? 'Kuota tempat sudah penuh pada tanggal tersebut.'
-                    : ($status === 'approved' ? 'Permohonan disetujui. Harap tiba 30 menit sebelum sesi dimulai.' : null),
-                'email_notified_at' => in_array($status, ['approved','rejected']) ? now()->subDays(abs($dayOffset) - 1) : null,
-                'created_at'        => Carbon::parse($tgl)->subDays(10),
-                'updated_at'        => Carbon::parse($tgl)->subDays(8),
-            ]);
+                $id = DB::table('kunjungan')->insertGetId([
+                    'nomor_registrasi'  => $noReg,
+                    'sekolah_id'        => $sekolahIds[$si],
+                    'kontak_id'         => $kontakIds[$si],
+                    'tempat_id'         => $tempatIds[$ti],
+                    'sesi_id'           => $sesiIds[$sei],
+                    'tanggal_kunjungan' => $tgl,
+                    'jumlah_peserta'    => rand(20, 250),
+                    'jumlah_kepsek'     => rand(0, 1),
+                    'jumlah_guru'       => rand(2, 15),
+                    'jumlah_tendik'     => rand(0, 5),
+                    'file_surat'        => null,
+                    'status'            => $status,
+                    'catatan_admin'     => $status === 'rejected'
+                        ? 'Kuota tempat sudah penuh pada tanggal tersebut. Silakan pilih jadwal lain.'
+                        : ($status === 'approved' ? 'Permohonan disetujui. Harap tiba 30 menit sebelum sesi dimulai.' : null),
+                    'email_notified_at' => in_array($status, ['approved','rejected']) ? now()->subDays(abs(rand(1, 5))) : null,
+                    'created_at'        => Carbon::parse($tgl)->subDays(rand(15, 30)),
+                    'updated_at'        => Carbon::parse($tgl)->subDays(rand(5, 14)),
+                ]);
 
-            $kunjunganIds[] = ['id' => $id, 'status' => $status, 'tgl' => $tgl, 'si' => $si, 'sei' => $sei];
+                $kunjunganIds[] = ['id' => $id, 'status' => $status, 'tgl' => $tgl, 'si' => $si, 'sei' => $sei];
 
-            // Log status
-            if ($status !== 'pending') {
-                DB::table('kunjungan_log')->insert([
-                    'kunjungan_id'   => $id,
-                    'status_sebelum' => 'pending',
-                    'status_sesudah' => $status,
-                    'catatan'        => "Status diubah oleh admin",
-                    'changed_by'     => $admin,
-                    'created_at'     => Carbon::parse($tgl)->subDays(8),
+                // Log status history
+                if ($status !== 'pending') {
+                    DB::table('kunjungan_log')->insert([
+                        'kunjungan_id'   => $id,
+                        'status_sebelum' => 'pending',
+                        'status_sesudah' => $status,
+                        'catatan'        => "Status diubah oleh admin (Simulasi Massal)",
+                        'changed_by'     => $admin,
+                        'created_at'     => Carbon::parse($tgl)->subDays(rand(5, 14)),
+                    ]);
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────────────
+        // 3. Presensi — HANYA untuk kunjungan yang 'completed'
+        // ─────────────────────────────────────────────────
+        foreach ($kunjunganIds as $k) {
+            if ($k['status'] === 'completed') {
+                $tgl = $k['tgl'];
+                
+                // Waktu masuk acak antara 08:00 - 09:30
+                $masuk = sprintf('%02d:%02d:00', rand(8, 9), rand(0, 59));
+                // Waktu keluar acak antara 11:30 - 15:00
+                $keluar = sprintf('%02d:%02d:00', rand(11, 14), rand(0, 59));
+
+                DB::table('kunjungan_presensi')->insert([
+                    'kunjungan_id'      => $k['id'],
+                    'waktu_masuk'       => Carbon::parse($tgl . ' ' . $masuk),
+                    'waktu_keluar'      => Carbon::parse($tgl . ' ' . $keluar),
+                    'petugas_masuk_id'  => $admin,
+                    'petugas_keluar_id' => $admin,
+                    'catatan'           => 'Presensi massal',
+                    'created_at'        => Carbon::parse($tgl . ' ' . $masuk),
+                    'updated_at'        => Carbon::parse($tgl . ' ' . $keluar),
                 ]);
             }
         }
 
         // ─────────────────────────────────────────────────
-        // 3. Presensi — untuk kunjungan completed & approved yg sudah lewat
+        // 4. Survei Kepuasan — HANYA untuk kunjungan 'completed'
         // ─────────────────────────────────────────────────
-        $presensiData = [
-            // Presensi untuk data Completed (Masa Lalu)
-            [0, '08:30:00', '12:15:00'],
-            [1, '12:40:00', '15:05:00'],
-            [2, '08:45:00', '12:30:00'],
-            [3, '12:35:00', '15:10:00'],
-            [4, '08:55:00', '12:20:00'],
-
-            // UNTUK DEMO CHECK-OUT: Hanya Check-In saja untuk index 6 (Hari Ini)
-            // Ini yang akan di-scan untuk simulasi Checkout.
-            [6, '08:40:00', null], 
+        $komentarPool = [
+            'Sangat memuaskan, luar biasa!',
+            'Anak-anak senang sekali bisa keliling UPI.',
+            'Fasilitas kampus sangat megah dan lengkap.',
+            'Pelayanan petugas informatif namun parkiran sempit.',
+            'Toilet di beberapa gedung kotor, harap diperbaiki.',
+            'Materi sosialisasi SNBP sangat bermanfaat untuk kelas 12.',
+            'Terima kasih KKIPP, kami akan jadwalkan lagi tahun depan.',
+            'Kami disambut dengan sangat ramah oleh kakak mahasiswa.',
         ];
 
-        foreach ($presensiData as [$ki, $masuk, $keluar]) {
-            $k   = $kunjunganIds[$ki];
-            $tgl = $k['tgl'];
-            DB::table('kunjungan_presensi')->insert([
-                'kunjungan_id'      => $k['id'],
-                'waktu_masuk'       => Carbon::parse($tgl . ' ' . $masuk),
-                'waktu_keluar'      => $keluar ? Carbon::parse($tgl . ' ' . $keluar) : null,
-                'petugas_masuk_id'  => $admin,
-                'petugas_keluar_id' => $keluar ? $admin : null,
-                'catatan'           => null,
-                'created_at'        => Carbon::parse($tgl . ' ' . $masuk),
-                'updated_at'        => $keluar ? Carbon::parse($tgl . ' ' . $keluar) : Carbon::parse($tgl . ' ' . $masuk),
-            ]);
+        foreach ($kunjunganIds as $k) {
+            if ($k['status'] === 'completed') {
+                // 80% kemungkinan mengisi survei
+                if (rand(1, 100) <= 80) {
+                    $rp = rand(3, 5); // Rating Pelayanan
+                    $rf = rand(2, 5); // Rating Fasilitas
+                    $ri = rand(4, 5); // Rating Informasi
+
+                    DB::table('survei_kepuasan')->insert([
+                        'kunjungan_id'     => $k['id'],
+                        'rating_pelayanan' => $rp,
+                        'rating_fasilitas' => $rf,
+                        'rating_informasi' => $ri,
+                        'komentar'         => $komentarPool[array_rand($komentarPool)],
+                        'saran'            => rand(1, 10) > 5 ? 'Perbanyak waktu keliling kampus.' : null,
+                        'tampilkan_publik' => rand(1, 10) > 2, // 80% ditampilkan
+                        'created_at'       => Carbon::parse($k['tgl'])->addHours(rand(2, 48)),
+                        'updated_at'       => Carbon::parse($k['tgl'])->addHours(rand(2, 48)),
+                    ]);
+                }
+            }
         }
 
         // ─────────────────────────────────────────────────
-        // 4. Survei Kepuasan — untuk kunjungan completed (index 0–5)
+        // 5. Tambahkan 1 Data Demo Khusus HARI INI (Approved)
+        //    (Supaya ada yang bisa di-scan check-in/out saat presentasi)
         // ─────────────────────────────────────────────────
-        $surveiData = [
-            [0, 5, 5, 5, 'Luar biasa! Pelayanan sangat ramah dan informatif. Siswa kami sangat antusias dan terinspirasi setelah melihat fasilitas kampus UPI.', 'Semoga program ini terus berkembang.', true],
-            [1, 4, 5, 4, 'Kunjungan sangat berkesan. Auditorium FPEB sangat megah dan kondisinya bersih. Petugas sangat membantu dan sabar menjawab pertanyaan siswa.', 'Mungkin bisa ada sesi tanya jawab dengan mahasiswa UPI.', true],
-            [2, 5, 4, 5, 'Program kunjungan ini sangat bermanfaat. Anak-anak jadi lebih termotivasi untuk masuk UPI. Terima kasih KKIPP UPI!', 'Tambahkan info beasiswa juga saat sesi berlangsung.', true],
-            [3, 4, 4, 4, 'Secara keseluruhan bagus. Jadwal berjalan tepat waktu dan koordinasi sangat baik.', 'Parkir kendaraan perlu diperluas untuk rombongan besar.', true],
-            [4, 5, 5, 4, 'Kami dari Sumedang merasa sangat disambut. Ice breaking-nya seru sekali! Siswa tidak bosan sama sekali.', null, true],
-            [5, 4, 3, 5, 'Pelayanan informasi sangat lengkap dan jelas. Fasilitas agak ramai hari itu tapi tetap kondusif.', 'Mohon disediakan air minum untuk peserta.', false],
-        ];
-
-        foreach ($surveiData as [$ki, $rp, $rf, $ri, $komentar, $saran, $publik]) {
-            DB::table('survei_kepuasan')->insert([
-                'kunjungan_id'     => $kunjunganIds[$ki]['id'],
-                'rating_pelayanan' => $rp,
-                'rating_fasilitas' => $rf,
-                'rating_informasi' => $ri,
-                'komentar'         => $komentar,
-                'saran'            => $saran,
-                'tampilkan_publik' => $publik,
-                'created_at'       => Carbon::parse($kunjunganIds[$ki]['tgl'])->addHours(rand(2, 24)),
-                'updated_at'       => Carbon::parse($kunjunganIds[$ki]['tgl'])->addHours(rand(2, 24)),
+        // Pastikan hari ini Senin-Kamis
+        $hariIni = Carbon::today();
+        if (in_array($hariIni->dayOfWeek, [1, 2, 3, 4])) {
+            $si = array_rand($sekolahIds);
+            $idHariIni = DB::table('kunjungan')->insertGetId([
+                'nomor_registrasi'  => 'UPI-' . $hariIni->format('Ymd') . '-9999',
+                'sekolah_id'        => $sekolahIds[$si],
+                'kontak_id'         => $kontakIds[$si],
+                'tempat_id'         => $tempatIds[0],
+                'sesi_id'           => $sesiIds[0],
+                'tanggal_kunjungan' => $hariIni->format('Y-m-d'),
+                'jumlah_peserta'    => 50,
+                'status'            => 'approved',
+                'email_notified_at' => now(),
+                'created_at'        => now()->subDays(15),
+                'updated_at'        => now()->subDays(2),
             ]);
+            $this->command->info('✅ Kunjungan spesial untuk Scanner Demo dibuat! No. Reg: UPI-' . $hariIni->format('Ymd') . '-9999');
+        } else {
+             $this->command->warn('⚠️ Hari ini adalah hari Libur/Jumat-Minggu. Data demo scanner tidak dibuat karena menyalahi aturan kalender.');
         }
 
-        // ─────────────────────────────────────────────────
-        // 5. Pengaturan Kalender (Overrides)
-        // ─────────────────────────────────────────────────
-        DB::table('pengaturan_kalender')->insert([
-            [
-                'tanggal'       => Carbon::today()->addDays(14)->format('Y-m-d'),
-                'is_libur'      => true,
-                'sesi_tersedia' => json_encode([]),
-                'catatan'       => 'Libur Ujian Akhir Semester',
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ],
-            [
-                'tanggal'       => Carbon::today()->addDays(16)->format('Y-m-d'),
-                'is_libur'      => false,
-                'sesi_tersedia' => json_encode([$sesiIds[0] ?? 1]), // Hanya Sesi 1
-                'catatan'       => 'Hanya menerima kunjungan Sesi 1',
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ]
-        ]);
-
-        $this->command->info('✅ DemoFullSeeder selesai:');
-        $this->command->info('   → 10 sekolah & kontak');
-        $this->command->info('   → 13 kunjungan (completed/approved/pending/rejected/cancelled)');
-        $this->command->info('   → 7 presensi (6 check-in+out, 1 check-in saja)');
-        $this->command->info('   → 6 survei kepuasan (5 publik, 1 private)');
-        $this->command->info('   → 2 pengaturan kalender (1 libur, 1 terbatas)');
+        $this->command->info('✅ DemoFullSeeder MASIF selesai:');
+        $this->command->info('   → 20 sekolah dummy dibuat.');
+        $this->command->info('   → 100 kunjungan dibuat (20 per status).');
+        $this->command->info('   → SEMUA email sekolah & PIC menggunakan ninawd27@gmail.com.');
+        $this->command->info('   → SEMUA tanggal dijamin jatuh pada hari Senin-Kamis (Tidak ada hari libur).');
+        $this->command->info('   → Presensi dan Survei otomatis di-generate untuk data Completed.');
     }
 }

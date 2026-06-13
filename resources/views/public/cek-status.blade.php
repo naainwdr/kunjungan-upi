@@ -102,7 +102,7 @@
                         <div class="text-sm text-green-800 text-center sm:text-left">
                             <p class="mb-2">✅ <strong>Selamat!</strong> Kunjungan Anda telah disetujui. Silakan tunjukkan QR Code ini atau e-Ticket saat kedatangan untuk registrasi (scan check-in).</p>
                             <p class="mb-3">Hubungi kami: 📲 <a href="https://wa.me/6285133332559" target="_blank" class="font-semibold hover:underline">085133332559</a> atau ✉️ humas@upi.edu</p>
-                            <a href="{{ route('reservasi.tiket', ['id' => $item->nomor_registrasi]) }}" target="_blank" class="inline-flex items-center gap-2 bg-green-700 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-green-800 transition-colors">
+                            <a href="{{ route('tiket.show', $item->nomor_registrasi) }}" target="_blank" class="inline-flex items-center gap-2 bg-green-700 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-green-800 transition-colors">
                                 🎟️ Buka &amp; Unduh e-Ticket
                             </a>
                         </div>
@@ -122,7 +122,7 @@
                     @if($item->updated_at->diffInDays(now()) <= 7)
                     <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <p class="text-sm text-gray-600">Form evaluasi tersedia selama 7 hari setelah kunjungan selesai.</p>
-                        <a href="{{ route('evaluasi.form', ['id' => $item->nomor_registrasi]) }}" class="inline-flex items-center justify-center bg-upi-blue text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
+                        <a href="{{ route('survei.form', $item->nomor_registrasi) }}" class="inline-flex items-center justify-center bg-upi-blue text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
                             Isi Form Evaluasi
                         </a>
                     </div>

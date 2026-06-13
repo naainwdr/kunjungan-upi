@@ -1,5 +1,5 @@
 @component('mail::message')
-# {{ $kunjungan->status === 'pending' ? 'Konfirmasi Penerimaan Pengajuan' : ($kunjungan->status === 'approved' ? '🎉 Pengajuan Kunjungan Disetujui!' : '📋 Informasi Status Pengajuan Kunjungan') }}
+# {{ $kunjungan->status === 'pending' ? 'Konfirmasi Penerimaan Pengajuan' : ($kunjungan->status === 'approved' ? '🎉 Pengajuan Kunjungan Disetujui!' : ($kunjungan->status === 'cancelled' ? '🚫 Pembatalan Kunjungan Berhasil' : '📋 Informasi Status Pengajuan Kunjungan')) }}
 
 Yth. Bapak/Ibu **{{ $kunjungan->kontak->nama }}**,
 {{ $kunjungan->sekolah->nama }}
@@ -11,6 +11,9 @@ Kami telah menerima pengajuan reservasi kunjungan dari sekolah Anda. Pengajuan a
 
 @elseif($kunjungan->status === 'approved')
 Dengan senang hati, kami informasikan bahwa pengajuan kunjungan sekolah Anda telah **disetujui**. Harap datang tepat waktu sesuai jadwal yang telah ditetapkan.
+
+@elseif($kunjungan->status === 'cancelled')
+Sesuai permintaan Anda, kami mengonfirmasi bahwa pengajuan kunjungan sekolah Anda telah **dibatalkan**. Jika Anda ingin menjadwalkan ulang, silakan buat pengajuan baru.
 
 @else
 Kami menyampaikan bahwa pengajuan kunjungan sekolah Anda **tidak dapat kami proses** saat ini. Untuk informasi lebih lanjut, silakan menghubungi Admin KKIPP UPI.
