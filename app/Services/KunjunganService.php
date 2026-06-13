@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
+use App\Models\Tempat;
 
 /**
  * Service untuk mengelola seluruh business logic permohonan kunjungan publik.
@@ -63,56 +65,73 @@ class KunjunganService
      */
     public function simpanPermohonan(array $data, UploadedFile $fileSurat): Kunjungan
     {
-        // Langkah 1: Upsert data sekolah — update jika NPSN sudah terdaftar,
-        // buat baru jika belum, agar database tidak berisi duplikat sekolah
-        $sekolah = Sekolah::updateOrCreate(
-            ['npsn' => $data['npsn']], // Kunci pencarian unik
-            [
-                'nama'    => $data['nama_sekolah'],
-                'alamat'  => $data['alamat'],
-                'email'   => $data['email_sekolah'],
-                'telepon' => $data['telepon_sekolah'],
-            ]
-        );
+        return DB::transaction(function () use ($data, $fileSurat) {
+            // PENGAMANAN: Pessimistic Locking untuk mencegah Race Condition
+            // Mengunci baris Tempat dan Sesi yang dipilih selama transaksi berlangsung.
+            // Jika ada request lain masuk di milidetik yang sama, request tersebut akan dipaksa menunggu.
+            Tempat::where('id', $data['tempat_id'])->lockForUpdate()->first();
+            Sesi::where('id', $data['sesi_id'])->lockForUpdate()->first();
 
-        // Langkah 2: Buat kontak baru untuk setiap permohonan
-        // (tidak di-upsert karena satu sekolah bisa diwakili PIC berbeda tiap permohonan)
-        $kontak = KontakSekolah::create([
-            'sekolah_id' => $sekolah->id,
-            'nama'       => $data['nama_pic'],
-            'jabatan'    => $data['jabatan_pic'],
-            'email'      => $data['email_pic'],
-            'telepon'    => $data['telepon_pic'],
-        ]);
+            // PENGAMANAN: Pengecekan ulang ketersediaan sesi SETELAH mendapat kunci (lock)
+            // Ini memastikan kapasitas benar-benar valid dan tidak didahului oleh transaksi lain.
+            $bookedSesi = $this->getBookedSesi($data['tanggal_kunjungan'], $data['tempat_id']);
+            if (in_array((int)$data['sesi_id'], $bookedSesi) || in_array((string)$data['sesi_id'], $bookedSesi)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'sesi_id' => 'Mohon maaf, karena tingginya lalu lintas, sesi yang Anda pilih baru saja berhasil dipesan oleh instansi lain di waktu yang bersamaan. Silakan pilih sesi atau tanggal lain.'
+                ]);
+            }
 
-        // Langkah 3: Upload file surat ke storage lokal
-        // Menggunakan disk 'public' agar bisa diakses melalui URL
-        $filePath = $fileSurat->store('surat', 'public');
+            // Langkah 1: Upsert data sekolah — update jika NPSN sudah terdaftar,
+            // buat baru jika belum, agar database tidak berisi duplikat sekolah
+            $sekolah = Sekolah::updateOrCreate(
+                ['npsn' => $data['npsn']], // Kunci pencarian unik
+                [
+                    'nama'    => $data['nama_sekolah'],
+                    'alamat'  => $data['alamat'],
+                    'email'   => $data['email_sekolah'],
+                    'telepon' => $data['telepon_sekolah'],
+                ]
+            );
 
-        // Langkah 4: Buat record kunjungan dengan semua data yang diperlukan
-        $kunjungan = Kunjungan::create([
-            'nomor_registrasi'  => Kunjungan::generateNomorRegistrasi(), // Generate nomor unik otomatis
-            'sekolah_id'        => $sekolah->id,
-            'kontak_id'         => $kontak->id,
-            'tempat_id'         => $data['tempat_id'],
-            'sesi_id'           => $data['sesi_id'],
-            'tanggal_kunjungan' => $data['tanggal_kunjungan'],
-            'jumlah_peserta'    => $data['jumlah_peserta'],
-            'jumlah_kepsek'     => $data['jumlah_kepsek'] ?? 0, // Default 0 jika tidak diisi
-            'jumlah_guru'       => $data['jumlah_guru'] ?? 0,
-            'jumlah_tendik'     => $data['jumlah_tendik'] ?? 0,
-            'file_surat'        => $filePath,
-            'status'            => 'pending', // Status awal selalu 'pending'
-        ]);
+            // Langkah 2: Buat kontak baru untuk setiap permohonan
+            // (tidak di-upsert karena satu sekolah bisa diwakili PIC berbeda tiap permohonan)
+            $kontak = KontakSekolah::create([
+                'sekolah_id' => $sekolah->id,
+                'nama'       => $data['nama_pic'],
+                'jabatan'    => $data['jabatan_pic'],
+                'email'      => $data['email_pic'],
+                'telepon'    => $data['telepon_pic'],
+            ]);
 
-        // Langkah 5: Catat status awal ke log untuk keperluan audit trail
-        $kunjungan->logStatus('pending', 'Permohonan baru diajukan oleh pemohon.');
+            // Langkah 3: Upload file surat ke storage lokal
+            // Menggunakan disk 'public' agar bisa diakses melalui URL
+            $filePath = $fileSurat->store('surat', 'public');
 
-        // Langkah 6: Kirim email konfirmasi ke PIC
-        // Dibungkus try-catch agar kegagalan email tidak membatalkan permohonan
-        $this->kirimEmailKonfirmasi($kunjungan, $kontak->email);
+            // Langkah 4: Buat record kunjungan dengan semua data yang diperlukan
+            $kunjungan = Kunjungan::create([
+                'nomor_registrasi'  => Kunjungan::generateNomorRegistrasi(), // Generate nomor unik otomatis
+                'sekolah_id'        => $sekolah->id,
+                'kontak_id'         => $kontak->id,
+                'tempat_id'         => $data['tempat_id'],
+                'sesi_id'           => $data['sesi_id'],
+                'tanggal_kunjungan' => $data['tanggal_kunjungan'],
+                'jumlah_peserta'    => $data['jumlah_peserta'],
+                'jumlah_kepsek'     => $data['jumlah_kepsek'] ?? 0, // Default 0 jika tidak diisi
+                'jumlah_guru'       => $data['jumlah_guru'] ?? 0,
+                'jumlah_tendik'     => $data['jumlah_tendik'] ?? 0,
+                'file_surat'        => $filePath,
+                'status'            => 'pending', // Status awal selalu 'pending'
+            ]);
 
-        return $kunjungan; // Kembalikan instance untuk digunakan controller (redirect ke halaman sukses)
+            // Langkah 5: Catat status awal ke log untuk keperluan audit trail
+            $kunjungan->logStatus('pending', 'Permohonan baru diajukan oleh pemohon.');
+
+            // Langkah 6: Kirim email konfirmasi ke PIC
+            // Dibungkus try-catch agar kegagalan email tidak membatalkan permohonan
+            $this->kirimEmailKonfirmasi($kunjungan, $kontak->email);
+
+            return $kunjungan; // Kembalikan instance untuk digunakan controller (redirect ke halaman sukses)
+        });
     }
 
     /**
